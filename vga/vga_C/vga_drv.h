@@ -1,5 +1,7 @@
 #define VGA_WIDTH	300
 #define VGA_HEIGHT	218
+#define VGA_MIDDLE_X (VGA_WIDTH / 2)
+#define VGA_MIDDLE_Y (VGA_HEIGHT / 2)
 
 #define BLACK		0
 #define BLUE		1
