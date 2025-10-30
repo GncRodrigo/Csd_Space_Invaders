@@ -1,6 +1,12 @@
 #include <hf-risc.h>
 #include "vga/vga_drv.h"
 
+#define VGA_MIDDLE_X (VGA_WIDTH / 2)
+#define VGA_MIDDLE_Y (VGA_HEIGHT / 2)
+
+#define QUANT 11 // quantidade por linha. Da pra mudar depois, ou aumentar por fase
+
+
 /* ---------- getInputKey.c content (PS/2 AXI peripheral reader) ---------- */
 
 /* endereço do periférico AXI */
@@ -85,164 +91,15 @@ char getInput(){ // tentei deixar sem while, talvez de merda, veremos
         }
         if (ch) {
             return ch;
+        } else {
+            return 0;
         }
     }
+    return 0;
 }
 
 /* ---------- objects.c content (object logic) ---------- */
-
-
-void draw_sprite(unsigned int x, unsigned int y, char *sprite,
-	unsigned int sizex, unsigned int sizey, int color)
-{
-	unsigned int px, py;
-	
-	if (color < 0) {
-		for (py = 0; py < sizey; py++)
-			for (px = 0; px < sizex; px++)
-				display_pixel(x + px, y + py, sprite[py * sizex + px]);
-	} else {
-		for (py = 0; py < sizey; py++)
-			for (px = 0; px < sizex; px++)
-				display_pixel(x + px, y + py, color & 0xf);
-	}
-	
-}
-
-/* sprite based objects */
-struct object_s {
-	char *sprite_frame[3];
-	char spriteszx, spriteszy, sprites;
-	int cursprite;
-	unsigned int posx, posy;
-	int dx, dy;
-	int speedx, speedy;
-	int speedxcnt, speedycnt;
-    int health;
-    int score;
-    int bullets;
-};
-
-
-void init_object(struct object_s *obj, char *spritea, char *spriteb,
-	char *spritec, char spriteszx, char spriteszy, int posx, int posy, 
-	int dx, int dy, int spx, int spy, int health, int score, int bullets)
-{
-	obj->sprite_frame[0] = spritea; /* frames de animação */
-	obj->sprite_frame[1] = spriteb; /* frames de animação */
-	obj->sprite_frame[2] = spritec; /* frames de animação */
-	obj->spriteszx = spriteszx;     /* tamanho do sprite */
-	obj->spriteszy = spriteszy;     /* tamanho do sprite */
-	obj->cursprite = 0;             /* frame atual */
-	obj->posx = posx;   
-	obj->posy = posy;
-	obj->dx = dx;
-	obj->dy = dy;
-	obj->speedx = spx;
-	obj->speedy = spy;
-	obj->speedxcnt = spx;           /* contadores de velocidade */
-	obj->speedycnt = spy;           /* contadores de velocidade */
-    obj->health = health;           /* vida do objeto */
-    obj->score = score;             /* pontuação do objeto, podemos usar tanto para os inimigos quanto para o jogador, vai somando do que mata na do jogador */
-    obj->bullets = bullets;         /* balas do objeto, a ideia eh limitar em um eu acho*/
-}
-
-void init_enemies(struct object_s &enemies, int type, int line)
-{
-    int startX = 20;
-    int spcX = 20;
-    int spcY = 20;
-
-    switch (type)
-    {
-    case 1:
-        for (int i = 0; i < QUANT; i++) {
-            init_object(&enemies[i], enemy1a[0], enemy1b[0], 0, 8, 8, startX + i * spcX, line * spcY, 1, 0, 5, 5, 1, 30, 1);
-        }
-        break;
-    case 2:
-        for (int i = 0; i < QUANT; i++) {
-            init_object(&enemies[i], enemy2a[0], enemy2b[0], 0, 11, 8, startX + i * spcX, line * spcY, 1, 0, 5, 5, 1, 20, 1);
-        }
-    default:
-        break;
-    }
-}
-
-void draw_object(struct object_s *obj, char chgsprite, int color)
-{
-	if (chgsprite) {
-		obj->cursprite++;
-		if (obj->sprite_frame[obj->cursprite] == 0)
-			obj->cursprite = 0;
-	}
-	
-	draw_sprite(obj->posx, obj->posy, obj->sprite_frame[obj->cursprite],
-		obj->spriteszx, obj->spriteszy, color);
-}
-
-void move_object(struct object_s *obj)
-{
-	struct object_s oldobj;
-	
-	memcpy(&oldobj, obj, sizeof(struct object_s));
-	
-	if (--obj->speedxcnt == 0) {
-		obj->speedxcnt = obj->speedx;
-		obj->posx = obj->posx + obj->dx;
-	}
-	if (--obj->speedycnt == 0) {
-		obj->speedycnt = obj->speedy;
-		obj->posy = obj->posy + obj->dy;
-	}
-
-	if ((obj->speedx == obj->speedxcnt) || (obj->speedy == obj->speedycnt)) {
-		draw_object(&oldobj, 0, 0);
-		draw_object(obj, 1, -1);
-	}
-}
-
-void move_enemies(struct object_s *enemies, int count){
-    int minX = VGA_WIDTH + 1, maxX = -1;
-    for (int i = 0; i < count; i++){ // pega a posicao dos extremos
-        if (enemies[i].health <= 0){ // morto nao conta
-            continue;
-        }
-        if (enemies[i].posx < minX) minX = enemies[i].posx;
-        if (enemies[i].posx > maxX) maxX = enemies[i].posx;
-    }
-
-    if (maxX + enemies[i].spriteszx >= (VGA_WIDTH - 10) || minX <= 10){ // 10 de margem
-        for (int i = 0; i < count; i++){
-            enemies[i].dx = -enemies[i].dx; // inverte a direção
-            enemies[i].posy += 10; // vai descendo, acho que nao precisa de limite aqui
-        }
-    }
-
-    for (int i = 0; i < count; i++){
-        if(enemies[i].health > 0){
-            move_object(&enemies[i]);
-        }
-    }
-}
-
-void move_ship(struct object_s *obj, char inputKey)
-{
-    if(inputKey == 'a' && obj->posx > (0 + obj->spriteszx)){ 
-        obj->posx -= 2; 
-    } else if(inputKey == 'd' && obj->posx < (SCREEN_WIDTH - obj->spriteszx)){
-        obj->posx += 2;
-    }
-
-    draw_object(obj, 0, -1);
-}
-
-void ship_fire_bullet(struct object_s *obj)
-{
-    // implementar depois
-}
-
-/* ---------- sprites  ---------- */
+/**/
 
 char mysteryShip[7][16] = {
     {0, 0, 0, 0, 0, 7, 7, 7, 7, 7, 7, 0, 0, 0, 0, 0},
@@ -309,6 +166,160 @@ char ship[8][13] = { // ta em verde
     {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
 };
 
+void draw_sprite(unsigned int x, unsigned int y, char *sprite,
+	unsigned int sizex, unsigned int sizey, int color)
+{
+	unsigned int px, py;
+	
+	if (color < 0) {
+		for (py = 0; py < sizey; py++)
+			for (px = 0; px < sizex; px++)
+				display_pixel(x + px, y + py, sprite[py * sizex + px]);
+	} else {
+		for (py = 0; py < sizey; py++)
+			for (px = 0; px < sizex; px++)
+				display_pixel(x + px, y + py, color & 0xf);
+	}
+	
+}
+
+/* sprite based objects */
+struct object_s {
+	char *sprite_frame[3];
+	char spriteszx, spriteszy, sprites;
+	int cursprite;
+	unsigned int posx, posy;
+	int dx, dy;
+	int speedx, speedy;
+	int speedxcnt, speedycnt;
+    int health;
+    int score;
+    int bullets;
+};
+
+
+void init_object(struct object_s *obj, char *spritea, char *spriteb,
+	char *spritec, char spriteszx, char spriteszy, int posx, int posy, 
+	int dx, int dy, int spx, int spy, int health, int score, int bullets)
+{
+	obj->sprite_frame[0] = spritea; /* frames de animação */
+	obj->sprite_frame[1] = spriteb; /* frames de animação */
+	obj->sprite_frame[2] = spritec; /* frames de animação */
+	obj->spriteszx = spriteszx;     /* tamanho do sprite */
+	obj->spriteszy = spriteszy;     /* tamanho do sprite */
+	obj->cursprite = 0;             /* frame atual */
+	obj->posx = posx;   
+	obj->posy = posy;
+	obj->dx = dx;
+	obj->dy = dy;
+	obj->speedx = spx;
+	obj->speedy = spy;
+	obj->speedxcnt = spx;           /* contadores de velocidade */
+	obj->speedycnt = spy;           /* contadores de velocidade */
+    obj->health = health;           /* vida do objeto */
+    obj->score = score;             /* pontuação do objeto, podemos usar tanto para os inimigos quanto para o jogador, vai somando do que mata na do jogador */
+    obj->bullets = bullets;         /* balas do objeto, a ideia eh limitar em um eu acho*/
+}
+
+void init_enemies(struct object_s *enemies, int type, int line)
+{
+    int startX = 20;
+    int spcX = 20;
+    int spcY = 20;
+
+    switch (type)
+    {
+    case 1:
+        for (int i = 0; i < QUANT; i++) {
+            init_object(&enemies[i], enemy1a[0], enemy1b[0], 0, 8, 8, startX + i * spcX, line * spcY, 1, 0, 5, 5, 1, 30, 1);
+        }
+        break;
+    case 2:
+        for (int i = 0; i < QUANT; i++) {
+            init_object(&enemies[i], enemy2a[0], enemy2b[0], 0, 11, 8, startX + i * spcX, line * spcY, 1, 0, 5, 5, 1, 20, 1);
+        }
+    default:
+        break;
+    }
+}
+
+void draw_object(struct object_s *obj, char chgsprite, int color)
+{
+	if (chgsprite) {
+		obj->cursprite++;
+		if (obj->sprite_frame[obj->cursprite] == 0)
+			obj->cursprite = 0;
+	}
+	
+	draw_sprite(obj->posx, obj->posy, obj->sprite_frame[obj->cursprite],
+		obj->spriteszx, obj->spriteszy, color);
+}
+
+void move_object(struct object_s *obj)
+{
+	struct object_s oldobj;
+	
+	memcpy(&oldobj, obj, sizeof(struct object_s));
+	
+	if (--obj->speedxcnt == 0) {
+		obj->speedxcnt = obj->speedx;
+		obj->posx = obj->posx + obj->dx;
+	}
+	if (--obj->speedycnt == 0) {
+		obj->speedycnt = obj->speedy;
+		obj->posy = obj->posy + obj->dy;
+	}
+
+	if ((obj->speedx == obj->speedxcnt) || (obj->speedy == obj->speedycnt)) {
+		draw_object(&oldobj, 0, 0);
+		draw_object(obj, 1, -1);
+	}
+}
+
+void move_enemies(struct object_s *enemies, int count){
+    int minX = VGA_WIDTH + 1, maxX = -1;
+    for (int i = 0; i < count; i++){ // pega a posicao dos extremos
+        if (enemies[i].health <= 0){ // morto nao conta
+            continue;
+        }
+        if (enemies[i].posx < minX) minX = enemies[i].posx;
+        if (enemies[i].posx > maxX) maxX = enemies[i].posx;
+        }
+    
+
+    for (int i = 0; i < count; i++){
+         if (maxX + enemies[i].spriteszx >= (VGA_WIDTH - 10) || minX <= 10){ // 10 de margem
+        for (int i = 0; i < count; i++){
+            enemies[i].dx = -enemies[i].dx; // inverte a direção
+            enemies[i].posy += 10; // vai descendo, acho que nao precisa de limite aqui
+        }
+    }
+
+    for (int i = 0; i < count; i++){
+        if(enemies[i].health > 0){
+            move_object(&enemies[i]);
+        }
+    }
+    
+    }
+}
+
+void move_ship(struct object_s *obj, char inputKey)
+{
+    if(inputKey == 'a' && obj->posx > (0 + obj->spriteszx)){ 
+        obj->posx -= 2; 
+    } else if(inputKey == 'd' && obj->posx < (VGA_WIDTH - obj->spriteszx)){
+        obj->posx += 2;
+    }
+
+    draw_object(obj, 0, -1);
+}
+
+void ship_fire_bullet(struct object_s *obj)
+{
+    // implementar depois
+}
+
 
 void start_menu(struct object_s *mysteryShip){
     draw_object(mysteryShip, 1, -1);
@@ -323,14 +334,12 @@ void init_display()
     display_background(BLACK); // acho que seria so isso por enquanto, podemos colocar algumas animacoes depois
 }
 
-void display_scores(char &player1_score){
+void display_scores(char *player1_score){
     display_print("SCORE:", 10, 10, 1, WHITE); // aquele 1 eh o tamanho, talvez tenha que aumentar, testamos depois
     display_print("HIGH SCORE:", VGA_MIDDLE_X - 40, 10, 1, WHITE);
-    display_print(&player1_score, 10, 20, 1, WHITE); // chutei a altura por enquanto
+    display_print(player1_score, 10, 20, 1, WHITE); // chutei a altura por enquanto
     display_print("00000", VGA_MIDDLE_X - 20, 20, 1, WHITE); // high score temporario
 }
-
-#define QUANT 11 // quantidade por linha. Da pra mudar depois, ou aumentar por fase
 
 int main()
 {
