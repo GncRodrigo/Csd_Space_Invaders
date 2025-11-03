@@ -171,11 +171,11 @@ module hfrisc_soc
 	assign ext_periph = ext_periph_vga || ext_periph_kbd;
 	
 	// Data read multiplexing - prioritize VGA, then keyboard, then peripherals, then memory
-	assign data_read = (ext_periph_vga == 1'b1 || ext_periph_vga_dly == 1'b1) ? data_read_vga :
-	                   (ext_periph_kbd == 1'b1 || ext_periph_kbd_dly == 1'b1) ? data_read_axis :
-	                   (periph == 1'b1 || periph_dly == 1'b1) ? data_read_periph :
-	                   (address[31:28] == 4'b0000 && ram_dly == 1'b0) ? data_read_boot : 
-	                   data_read_ram;
+	assign data_read = (ext_periph_kbd == 1'b1 || ext_periph_kbd_dly == 1'b1) ? data_read_axis :
+                   (ext_periph_vga == 1'b1 || ext_periph_vga_dly == 1'b1) ? data_read_vga :
+                   (periph == 1'b1 || periph_dly == 1'b1) ? data_read_periph :
+                   (address[31:28] == 4'b0000 && ram_dly == 1'b0) ? data_read_boot :
+                   data_read_ram;
 	                   
 	assign data_w_n_ram =  ~data_we;
 	assign ext_irq = {7'b0000000,periph_irq};

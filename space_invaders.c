@@ -41,62 +41,49 @@ int sw_axi_data_available()
     return (SW_AXI_STATUS & SW_AXI_STVALID);
 }
 
-char getInput(){ // tentei deixar sem while, talvez de merda, veremos
-    /* PS/2 scancode reader
-     * Reads raw scancodes from the AXI peripheral and sends the corresponding
-     * ASCII character (for common keys) or a human-readable name for special keys.
-     * Only sends on key press (make code) and handles the E0 and F0 prefixes.
-     */
+char getInput(){ // non-blocking, stateful: mapeia apenas 'a','d' e 'space'
+    static uint8_t saw_f0 = 0;
+    static uint8_t saw_e0 = 0;
+    char ret = 0;
 
-     if(!sw_axi_data_available()){
-        return 0; // no input
-     }
+    /* se nao houver dado, retorna imediatamente */
+    while (sw_axi_data_available()) {
+        uint8_t x = sw_axi(); /* só chamado se há dado */
 
-    uint8_t pressed = 0;
-    uint8_t x = sw_axi();
-
-    if (x == 0xF0){
-        pressed = 1;
-    } else if(pressed){
-        pressed = 0;
-        char ch = 0;
-        switch (x) {
-            /* numbers (top row) */
-            case 0x16: ch = '1'; break;
-            case 0x1E: ch = '2'; break;
-            case 0x26: ch = '3'; break;
-            case 0x25: ch = '4'; break;
-            case 0x2E: ch = '5'; break;
-            case 0x36: ch = '6'; break;
-            case 0x3D: ch = '7'; break;
-            case 0x3E: ch = '8'; break;
-            case 0x46: ch = '9'; break;
-            case 0x45: ch = '0'; break;
-            /* letters */
-            case 0x15: ch = 'q'; break; case 0x1D: ch = 'w'; break; case 0x24: ch = 'e'; break; case 0x2D: ch = 'r'; break; case 0x2C: ch = 't'; break;
-            case 0x35: ch = 'y'; break; case 0x3C: ch = 'u'; break; case 0x43: ch = 'i'; break; case 0x44: ch = 'o'; break; case 0x4D: ch = 'p'; break;
-            case 0x1C: ch = 'a'; break; case 0x1B: ch = 's'; break; case 0x23: ch = 'd'; break; case 0x2B: ch = 'f'; break; case 0x34: ch = 'g'; break;
-            case 0x33: ch = 'h'; break; case 0x3B: ch = 'j'; break; case 0x42: ch = 'k'; break; case 0x4B: ch = 'l'; break;
-            case 0x1A: ch = 'z'; break; case 0x22: ch = 'x'; break; case 0x21: ch = 'c'; break; case 0x2A: ch = 'v'; break; case 0x32: ch = 'b'; break;
-            case 0x31: ch = 'n'; break; case 0x3A: ch = 'm'; break; 
-            //case 0x66: ch = '\b'; putchar(ch); ch =' '; putchar(ch); ch = '\b'; break; 
-            //case 0x5A: ch = '\n'; break;
-            case 0x41: ch = ','; break;
-            case 0x49: ch = '.'; break;
-            /* special keys */
-            case 0x29: ch = ' '; break; /* space bar */
-            default:
-                ch = 0; /* ignore other keys */
-                break;
+        if (x == 0xE0) { /* prefixo extended */
+            saw_e0 = 1;
+            continue;
         }
-        if (ch) {
-            return ch;
+        if (x == 0xF0) { /* prefixo de release */
+            saw_f0 = 1;
+            continue;
+        }
+
+        if (saw_f0) { /* release: descarta e limpa flags */
+            saw_f0 = 0;
+            saw_e0 = 0;
+            continue;
+        }
+
+        /* make code: mapear apenas as teclas necessárias */
+        if (!saw_e0) {
+            if (x == 0x1C) ret = 'a';     /* 'a' make */
+            else if (x == 0x23) ret = 'd';/* 'd' make */
+            else if (x == 0x29) ret = ' ';/* space */
         } else {
-            return 0;
+            /* extended make: sem mapeamento por enquanto */
+            ret = 0;
         }
+
+        saw_e0 = 0; /* limpar E0 após uso */
+
+        if (ret) return ret;
+        /* se não mapeou, continua consumindo scancodes disponíveis */
     }
+
     return 0;
 }
+// ...existing code...
 
 /* ---------- objects.c content (object logic) ---------- */
 /**/
@@ -158,12 +145,13 @@ char enemy2b[8][11] = { // todos em branco
 char ship[8][13] = { // ta em verde
     {0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0},
-    {0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0},
+    {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
+    {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
     {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
     {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
     {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
     {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
+
 };
 
 void draw_sprite(unsigned int x, unsigned int y, char *sprite,
@@ -224,19 +212,20 @@ void init_object(struct object_s *obj, char *spritea, char *spriteb,
 void init_enemies(struct object_s *enemies, int type, int line)
 {
     int startX = 20;
+    int startY = 20;
     int spcX = 20;
     int spcY = 20;
 
     switch (type)
-    {
+    {   
     case 1:
         for (int i = 0; i < QUANT; i++) {
-            init_object(&enemies[i], enemy1a[0], enemy1b[0], 0, 8, 8, startX + i * spcX, line * spcY, 1, 0, 5, 5, 1, 30, 1);
+            init_object(&enemies[i], enemy1a[0], enemy1b[0], 0, 8, 8, startX + i * spcX, startY + line * spcY, 1, 0, 5, 5, 1, 30, 1);
         }
         break;
     case 2:
         for (int i = 0; i < QUANT; i++) {
-            init_object(&enemies[i], enemy2a[0], enemy2b[0], 0, 11, 8, startX + i * spcX, line * spcY, 1, 0, 5, 5, 1, 20, 1);
+            init_object(&enemies[i], enemy2a[0], enemy2b[0], 0, 11, 8, startX + i * spcX, startY + line * spcY, 1, 0, 5, 5, 1, 20, 1);
         }
     default:
         break;
@@ -290,7 +279,7 @@ void move_enemies(struct object_s *enemies, int count){
     for (int i = 0; i < count; i++){
          if (maxX + enemies[i].spriteszx >= (VGA_WIDTH - 10) || minX <= 10){ // 10 de margem
         for (int i = 0; i < count; i++){
-            enemies[i].dx = -enemies[i].dx; // inverte a direção
+            enemies[i].dx = -(enemies[i].dx); // inverte a direção
             enemies[i].posy += 10; // vai descendo, acho que nao precisa de limite aqui
         }
     }
@@ -306,12 +295,16 @@ void move_enemies(struct object_s *enemies, int count){
 
 void move_ship(struct object_s *obj, char inputKey)
 {
+    struct object_s oldobj;
+	memcpy(&oldobj, obj, sizeof(struct object_s));
+
     if(inputKey == 'a' && obj->posx > (0 + obj->spriteszx)){ 
-        obj->posx -= 2; 
+        obj->posx -= 3; 
     } else if(inputKey == 'd' && obj->posx < (VGA_WIDTH - obj->spriteszx)){
-        obj->posx += 2;
+        obj->posx += 3;
     }
 
+    draw_object(&oldobj, 0, 0);
     draw_object(obj, 0, -1);
 }
 
@@ -324,7 +317,7 @@ void ship_fire_bullet(struct object_s *obj)
 void start_menu(struct object_s *mysteryShip){
     draw_object(mysteryShip, 1, -1);
     display_print("SPACE INVADERS", VGA_MIDDLE_X - 50, VGA_MIDDLE_Y - 20, 2, WHITE);
-    display_print("PRESS ANY KEY TO START", VGA_MIDDLE_X - 70, VGA_MIDDLE_Y + 10, 1, WHITE);
+    display_print("PRESS 'space' TO START", VGA_MIDDLE_X - 70, VGA_MIDDLE_Y + 10, 1, WHITE);
     display_print("USE 'a' / 'd' TO MOVE", VGA_MIDDLE_X - 70, VGA_MIDDLE_Y + 30, 1, WHITE);
     display_print("PRESS 'space' TO SHOOT", VGA_MIDDLE_X - 70, VGA_MIDDLE_Y + 50, 1, WHITE);
 }
@@ -366,10 +359,12 @@ int main()
         start_menu(&mysteryShipObj);
         move_object(&mysteryShipObj);
         char inputKey = getInput();
-        if(inputKey != 0){
+        if(inputKey == ' '){
             menu = 0;
+            init_display();
             running = 1;
         }
+        if (inputKey) putchar(inputKey);
     }
 
     while (running)  {
@@ -389,6 +384,7 @@ int main()
         } else if(inputKey == ' '){
             ship_fire_bullet(&playerShip);
         }
+        if (inputKey) putchar(inputKey);
 
         // move de baixo pra cima, videozao que eu vi tava assim eu acho
         move_enemies(enemies_type1_b, QUANT);
