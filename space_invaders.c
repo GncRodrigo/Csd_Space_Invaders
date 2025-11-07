@@ -247,7 +247,9 @@ void draw_object(struct object_s *obj, char chgsprite, int color)
 void move_object(struct object_s *obj, int flag)
 {
 	struct object_s oldobj;
-	
+	if(flag){
+        obj->dx = -obj->dx; // inverte a direcao
+    }
 	memcpy(&oldobj, obj, sizeof(struct object_s));
 	
 	if (--obj->speedxcnt == 0) {
@@ -280,7 +282,6 @@ void move_enemies(struct object_s *enemies, int count){
     for (int i = 0; i < count; i++){
          if (maxX + enemies[i].spriteszx >= (VGA_WIDTH - 10) || minX <= 10){ // 10 de margem
         for (int i = 0; i < count; i++){
-            enemies[i].dx = -(enemies[i].dx); // inverte a direção
             enemies[i].posy += 48; // vai descendo, acho que nao precisa de limite aqui
             flag = 1;
         }
