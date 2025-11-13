@@ -244,12 +244,10 @@ void draw_object(struct object_s *obj, char chgsprite, int color)
 		obj->spriteszx, obj->spriteszy, color);
 }
 
-void move_object(struct object_s *obj, int flag)
+void move_object(struct object_s *obj)
 {
 	struct object_s oldobj;
-	if(flag){
-        obj->dx = -obj->dx; // inverte a direcao
-    }
+	
 	memcpy(&oldobj, obj, sizeof(struct object_s));
 	
 	if (--obj->speedxcnt == 0) {
@@ -269,7 +267,6 @@ void move_object(struct object_s *obj, int flag)
 
 void move_enemies(struct object_s *enemies, int count){
     int minX = VGA_WIDTH + 1, maxX = -1;
-    int flag = 0;
     for (int i = 0; i < count; i++){ // pega a posicao dos extremos
         if (enemies[i].health <= 0){ // morto nao conta
             continue;
@@ -282,21 +279,21 @@ void move_enemies(struct object_s *enemies, int count){
     for (int i = 0; i < count; i++){
          if (maxX + enemies[i].spriteszx >= (VGA_WIDTH - 10) || minX <= 10){ // 10 de margem
         for (int i = 0; i < count; i++){
-            enemies[i].posy += 48; // vai descendo, acho que nao precisa de limite aqui
-            flag = 1;
+            enemies[i].dx = -(enemies[i].dx); // inverte a direção
+            enemies[i].posy += 10; // vai descendo, acho que nao precisa de limite aqui
         }
     }
 
     for (int i = 0; i < count; i++){
         if(enemies[i].health > 0){
-            move_object(&enemies[i], flag);
+            move_object(&enemies[i]);
         }
     }
     
     }
 }
 
-void move_ship(struct object_s *obj, char *inputKey)
+void move_ship(struct object_s *obj, char inputKey)
 {
     struct object_s oldobj;
 	memcpy(&oldobj, obj, sizeof(struct object_s));
@@ -307,14 +304,19 @@ void move_ship(struct object_s *obj, char *inputKey)
         obj->posx += 3;
     }
 
-    inputKey = 0;
     draw_object(&oldobj, 0, 0);
     draw_object(obj, 0, -1);
 }
 
+void ship_fire_bullet(struct object_s *obj)
+{
+    // implementar depois
+}
+
+
 void start_menu(struct object_s *mysteryShip){
     draw_object(mysteryShip, 1, -1);
-    display_print("SPACE INVADERS", VGA_MIDDLE_X - 70, VGA_MIDDLE_Y - 20, 2, WHITE);
+    display_print("SPACE INVADERS", VGA_MIDDLE_X - 50, VGA_MIDDLE_Y - 20, 2, WHITE);
     display_print("PRESS 'space' TO START", VGA_MIDDLE_X - 70, VGA_MIDDLE_Y + 10, 1, WHITE);
     display_print("USE 'a' / 'd' TO MOVE", VGA_MIDDLE_X - 70, VGA_MIDDLE_Y + 30, 1, WHITE);
     display_print("PRESS 'space' TO SHOOT", VGA_MIDDLE_X - 70, VGA_MIDDLE_Y + 50, 1, WHITE);
@@ -339,7 +341,7 @@ int main()
     struct object_s enemies_type1_b[QUANT];
     struct object_s enemies_type2[QUANT];
     struct object_s playerShip;
-
+    
     
     init_display();
 
@@ -355,7 +357,7 @@ int main()
 
     while(menu){
         start_menu(&mysteryShipObj);
-        //move_object(&mysteryShipObj);
+        move_object(&mysteryShipObj);
         char inputKey = getInput();
         if(inputKey == ' '){
             menu = 0;
@@ -376,10 +378,12 @@ int main()
         }
 
         char inputKey = getInput();
-        
-        if(inputKey == 'a' || inputKey == 'd'){ // tem que mudar isso, não entra aqui, mas ta lendo
-            move_ship(&playerShip, &inputKey);
-	    };
+
+        if(inputKey == 'a' || inputKey == 'd'){
+            move_ship(&playerShip, inputKey);
+        } else if(inputKey == ' '){
+            ship_fire_bullet(&playerShip);
+        }
         if (inputKey) putchar(inputKey);
 
         // move de baixo pra cima, videozao que eu vi tava assim eu acho
@@ -390,4 +394,4 @@ int main()
     }
 
     return 0;
-}
+}   

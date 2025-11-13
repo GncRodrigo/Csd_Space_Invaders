@@ -1,9 +1,3 @@
--- Fazer ack em software e limpar em hardware
-
--- So limpar em software (meio chato, provavelmente vai impedir andar duas vezes pro mesmo lado ou ser extremamente confuso)
-
-----------------------------------------------
-
-1: if_axis -- mapea a memoria e implementa status, não tem tratamento para write nas memorias
-    kbd_axis -- produz scancodes por AXI Stream
-    ps2_keyboard -- gera ps2_code_new / ps2_code
+--- Fazer o que o professor falou:
+        usar uma flag na memoria para criar um estado em que a memoria é apagada, o entuito é para ele parar de andar infinito.
+        fazer 2 process no if_axi um pra escreve no registrador 0 quando a tecla for lida pelo c, graxa véia

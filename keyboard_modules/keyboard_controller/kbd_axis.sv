@@ -53,11 +53,13 @@ module kbd_axis #(
 						tvalid_reg <= 1'b1;
 						state <= SEND;
 					end
+
 				end
 				SEND: begin
 					if (m_axis_tready_i) begin
 						tvalid_reg <= 1'b0;
 						state <= IDLE;
+						m_axis_tdata_o <= {AXIS_DATA_WIDTH{1'b0}};
 					end
 				end
 			endcase

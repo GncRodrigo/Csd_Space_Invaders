@@ -31,7 +31,7 @@ ENTITY ps2_keyboard IS
     clk          : IN  STD_LOGIC;                     --system clock
     ps2_clk      : IN  STD_LOGIC;                     --clock signal from PS/2 keyboard
     ps2_data     : IN  STD_LOGIC;                     --data signal from PS/2 keyboard
-    ps2_code_new : OUT STD_LOGIC;                     --flag that new PS/2 code is available on ps2_code bus
+    ps2_code_new : INOUT STD_LOGIC;                     --flag that new PS/2 code is available on ps2_code bus
     ps2_code     : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)); --code received from PS/2
 END ps2_keyboard;
 
@@ -95,7 +95,7 @@ BEGIN
           count_idle <= count_idle + 1;            --continue counting
       END IF;
       
-      IF(count_idle = clk_freq/18_000 AND error = '0') THEN  --idle threshold reached and no errors detected
+      IF(count_idle = clk_freq/18_000 AND error = '0' AND ps2_code_new = '0') THEN  --idle threshold reached and no errors detected
         ps2_code_new <= '1';                                   --set flag that new PS/2 code is available
         ps2_code <= ps2_word(8 DOWNTO 1);                      --output new PS/2 code
       ELSE                                                   --PS/2 port active or error detected
