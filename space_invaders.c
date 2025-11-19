@@ -323,10 +323,12 @@ void move_enemies(struct object_s *enemies, int count){
     }
     
         
-    if (maxX + enemies[0].spriteszx >= VGA_WIDTH || minX <= 0){ // 10 de margem
+    if (maxX + enemies[0].spriteszx >= VGA_WIDTH || minX <= 0){ // chegou na borda
         for (int i = 0; i < count; i++){
             enemies[i].dx = -enemies[i].dx; // inverte a direção
-            enemies[i].posy += 20; // vai descendo, acho que nao precisa de limite aqui
+            enemies[i].posy += 20; // vai descendo
+            // força saída da borda com movimento imediato
+            enemies[i].posx += enemies[i].dx * 2;
         }
     }
 
@@ -345,7 +347,7 @@ void move_ship(struct object_s *obj, char inputKey)
 
     if(inputKey == 'a' && obj->posx > (0 + obj->spriteszx)){ 
         obj->posx -= 3; 
-    } else if(inputKey == 'd' && obj->posx < (VGA_WIDTH - obj->spriteszx + 3)){
+    } else if(inputKey == 'd' && obj->posx < VGA_WIDTH){
         obj->posx += 3;
     }
 
@@ -361,7 +363,7 @@ void ship_fire_bullet(struct object_s *obj)
 
 void start_menu(struct object_s *mysteryShip){
     draw_object(mysteryShip, 1, -1);
-    display_print("SPACE INVADERS", VGA_MIDDLE_X - 70, 20, 3, WHITE);
+    display_print("SPACE INVADERS", VGA_MIDDLE_X - 90, 20, 2, WHITE);
     display_print("PRESS 'space' TO START", VGA_MIDDLE_X - 70, VGA_MIDDLE_Y + 10, 1, WHITE);
     display_print("USE 'a' / 'd' TO MOVE", VGA_MIDDLE_X - 70, VGA_MIDDLE_Y + 30, 1, WHITE);
     display_print("PRESS 'space' TO SHOOT", VGA_MIDDLE_X - 70, VGA_MIDDLE_Y + 50, 1, WHITE);
