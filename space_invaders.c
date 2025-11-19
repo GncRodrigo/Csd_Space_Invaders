@@ -314,25 +314,30 @@ void move_object(struct object_s *obj)
 
 void move_enemies(struct object_s *enemies, int count){
     int minX = VGA_WIDTH + 1, maxX = -1;
-    int MARGIN = 10; // margem de segurança para detecção de borda
+    int i;
     
-    for (int i = 0; i < count; i++){ // pega a posicao dos extremos
-        if (enemies[i].health <= 0){ // morto nao conta
-            continue;
-        }
-        if (enemies[i].posx < minX) minX = enemies[i].posx;
-        if (enemies[i].posx > maxX) maxX = enemies[i].posx;
+    // Encontrar posições extremas considerando o movimento que SERÁ feito
+    for (i = 0; i < count; i++){
+        if (enemies[i].health <= 0) continue;
+        
+        // Simula o próximo movimento
+        int next_x = enemies[i].posx + enemies[i].dx;
+        
+        if (next_x < minX) minX = next_x;
+        if (next_x + enemies[i].spriteszx > maxX) maxX = next_x + enemies[i].spriteszx;
     }
     
-    // Verifica se VA passar da borda (com margem de antecipação)
-    if (maxX + enemies[0].spriteszx + MARGIN >= VGA_WIDTH || minX - MARGIN <= 0){ 
-        for (int i = 0; i < count; i++){
-            enemies[i].dx = -enemies[i].dx; // inverte a direção
-            enemies[i].posy += 20; // vai descendo
+    // Se VAI passar da borda, inverte ANTES de mover
+    if (maxX >= VGA_WIDTH || minX <= 0) {
+        for (i = 0; i < count; i++){
+            enemies[i].dx = -enemies[i].dx;
+            draw_object(&enemies[i], 0, 0);
+            enemies[i].posy += 20;
         }
     }
 
-    for (int i = 0; i < count; i++){
+    // Move todos normalmente
+    for (i = 0; i < count; i++){
         if(enemies[i].health > 0){
             move_object(&enemies[i]);
         }
