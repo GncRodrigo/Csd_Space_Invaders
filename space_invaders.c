@@ -429,9 +429,9 @@ int main()
 
     // declarações barreiras
     init_object(&barriers[0], barrier[0], 0, 0, 22, 16, 40, VGA_HEIGHT - 60, 0, 0, 0, 0, 5, 0, 0);
-    init_object(&barriers[1], barrier[0], 0, 0, 22, 16, 75, VGA_HEIGHT - 60, 0, 0, 0, 0, 5, 0, 0);
-    init_object(&barriers[2], barrier[0], 0, 0, 22, 16, 150, VGA_HEIGHT - 60, 0, 0, 0, 0, 5, 0, 0);
-    init_object(&barriers[3], barrier[0], 0, 0, 22, 16, 225, VGA_HEIGHT - 60, 0, 0, 0, 0, 5, 0, 0);
+    init_object(&barriers[1], barrier[0], 0, 0, 22, 16, 100, VGA_HEIGHT - 60, 0, 0, 0, 0, 5, 0, 0);
+    init_object(&barriers[2], barrier[0], 0, 0, 22, 16, 180, VGA_HEIGHT - 60, 0, 0, 0, 0, 5, 0, 0);
+    init_object(&barriers[3], barrier[0], 0, 0, 22, 16, 260, VGA_HEIGHT - 60, 0, 0, 0, 0, 5, 0, 0);
 
     char player1_score[6] = "00000";
     int running = 0; 
