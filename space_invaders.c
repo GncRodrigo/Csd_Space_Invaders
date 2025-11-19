@@ -300,14 +300,10 @@ void move_object(struct object_s *obj)
 	if (--obj->speedxcnt == 0) {
 		obj->speedxcnt = obj->speedx;
 		obj->posx = obj->posx + obj->dx;
-
-		if (obj->posx + obj->spriteszx >= VGA_WIDTH || obj->posx <= 0) obj->dx = -obj->dx; 
 	}
 	if (--obj->speedycnt == 0) {
 		obj->speedycnt = obj->speedy;
 		obj->posy = obj->posy + obj->dy;
-
-		if (obj->posy + obj->spriteszy >= VGA_HEIGHT || obj->posy <= 0) obj->dy = -obj->dy;
 	}
 
 	if ((obj->speedx == obj->speedxcnt) || (obj->speedy == obj->speedycnt)) {
@@ -317,7 +313,30 @@ void move_object(struct object_s *obj)
 }
 
 void move_enemies(struct object_s *enemies, int count){
-    for (int i = 0; i < count; i++){
+    int minX = VGA_WIDTH + 1, maxX = -1;
+    int i;
+    
+    // Encontrar posições extremas considerando o movimento que SERÁ feito
+    for (i = 0; i < count; i++){
+        if (enemies[i].health <= 0) continue;
+        
+        // Simula o próximo movimento
+        int next_x = enemies[i].posx + enemies[i].dx;
+        
+        if (next_x < minX) minX = next_x;
+        if (next_x + enemies[i].spriteszx > maxX) maxX = next_x + enemies[i].spriteszx;
+    }
+    
+    // Se VAI passar da borda, inverte ANTES de mover
+    if (maxX >= VGA_WIDTH || minX <= 0) {
+        for (i = 0; i < count; i++){
+            enemies[i].dx = -enemies[i].dx;
+            enemies[i].posy += 30; // desce um pouco
+        }
+    }
+
+    // Move todos normalmente
+    for (i = 0; i < count; i++){
         if(enemies[i].health > 0){
             move_object(&enemies[i]);
         }
