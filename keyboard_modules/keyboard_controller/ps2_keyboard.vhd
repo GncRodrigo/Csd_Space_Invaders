@@ -95,7 +95,7 @@ BEGIN
           count_idle <= count_idle + 1;            --continue counting
       END IF;
       
-      IF(count_idle = clk_freq/18_000 AND error = '0' AND ps2_code_new = '0') THEN  --idle threshold reached and no errors detected
+      IF(count_idle = clk_freq/18_000 AND error = '0') THEN  --idle threshold reached and no errors detected
         ps2_code_new <= '1';                                   --set flag that new PS/2 code is available
         ps2_code <= ps2_word(8 DOWNTO 1);                      --output new PS/2 code
       ELSE                                                   --PS/2 port active or error detected
