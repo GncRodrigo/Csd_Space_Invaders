@@ -99,47 +99,69 @@ char mysteryShip[7][16] = {
 };
 
 char enemy1a[8][8] = {
-    {0, 0, 0, 7, 7, 0, 0, 0},
-    {0, 0, 7, 7, 7, 7, 0, 0},
-    {0, 7, 7, 7, 7, 7, 7, 0},
-    {7, 7, 0, 7, 7, 0, 7, 7},
-    {7, 7, 7, 7, 7, 7, 7, 7},
-    {0, 7, 0, 7, 7, 0, 7, 0},
-    {7, 0, 0, 0, 0, 0, 0, 7},
-    {0, 7, 0, 0, 0, 0, 7, 0}
+    {0, 0, 0, 5, 5, 0, 0, 0},
+    {0, 0, 5, 5, 5, 5, 0, 0},
+    {0, 5, 5, 5, 5, 5, 5, 0},
+    {5, 5, 0, 5, 5, 0, 5, 5},
+    {5, 5, 5, 5, 5, 5, 5, 5},
+    {0, 5, 0, 5, 5, 0, 5, 0},
+    {5, 0, 0, 0, 0, 0, 0, 5},
+    {0, 5, 0, 0, 0, 0, 5, 0}
 };
 
 char enemy1b[8][8] = {
-    {0, 0, 0, 7, 7, 0, 0, 0},
-    {0, 0, 7, 7, 7, 7, 0, 0},
-    {0, 7, 7, 7, 7, 7, 7, 0},
-    {7, 7, 0, 7, 7, 0, 7, 7},
-    {7, 7, 7, 7, 7, 7, 7, 7},
-    {0, 0, 7, 0, 0, 7, 0, 0},
-    {0, 7, 0, 7, 7, 0, 7, 0},
-    {7, 0, 7, 0, 0, 7, 0, 7}
+    {0, 0, 0, 5, 5, 0, 0, 0},
+    {0, 0, 5, 5, 5, 5, 0, 0},
+    {0, 5, 5, 5, 5, 5, 5, 0},
+    {5, 5, 0, 5, 5, 0, 5, 5},
+    {5, 5, 5, 5, 5, 5, 5, 5},
+    {0, 0, 5, 0, 0, 5, 0, 0},
+    {0, 5, 0, 5, 5, 0, 5, 0},
+    {5, 0, 5, 0, 0, 5, 0, 5}
 };
 
 char enemy2a[8][11] = {
-    {0, 0, 7, 0, 0, 0, 0, 0, 7, 0, 0},
-    {7, 0, 0, 7, 0, 0, 0, 7, 0, 0, 7},
-    {7, 0, 7, 7, 7, 7, 7, 7, 7, 0, 7},
-    {7, 7, 7, 0, 7, 7, 7, 0, 7, 7, 7},
-    {7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7},
-    {0, 7, 7, 7, 7, 7, 7, 7, 7, 7, 0},
-    {0, 0, 7, 0, 0, 0, 0, 0, 7, 0, 0},
-    {0, 7, 0, 0, 0, 0, 0, 0, 0, 7, 0}
+    {0, 0, 3, 0, 0, 0, 0, 0, 3, 0, 0},
+    {3, 0, 0, 3, 0, 0, 0, 3, 0, 0, 3},
+    {3, 0, 3, 3, 3, 3, 3, 3, 3, 0, 3},
+    {3, 3, 3, 0, 3, 3, 3, 0, 3, 3, 3},
+    {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
+    {0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0},
+    {0, 0, 3, 0, 0, 0, 0, 0, 3, 0, 0},
+    {0, 3, 0, 0, 0, 0, 0, 0, 0, 3, 0}
 };
 
 char enemy2b[8][11] = { // todos em branco
-    {0, 0, 7, 0, 0, 0, 0, 0, 7, 0, 0},
-    {0, 0, 0, 7, 0, 0, 0, 7, 0, 0, 0},
-    {0, 0, 7, 7, 7, 7, 7, 7, 7, 0, 0},
-    {0, 7, 7, 0, 7, 7, 7, 0, 7, 7, 0},
-    {7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7},
-    {7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7},
-    {7, 0, 7, 0, 0, 0, 0, 0, 7, 0, 7},
-    {0, 0, 0, 7, 7, 0, 7, 7, 0, 0, 0}
+    {0, 0, 3, 0, 0, 0, 0, 0, 3, 0, 0},
+    {0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0},
+    {0, 0, 3, 3, 3, 3, 3, 3, 3, 0, 0},
+    {0, 3, 3, 0, 3, 3, 3, 0, 3, 3, 0},
+    {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
+    {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
+    {3, 0, 3, 0, 0, 0, 0, 0, 3, 0, 3},
+    {0, 0, 0, 3, 3, 0, 3, 3, 0, 0, 0}
+};
+
+char enemy3a[8][12] = {
+    {0, 0, 0, 0, 5, 5, 5, 5, 0, 0, 0, 0},
+    {0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0},
+    {5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5},
+    {5, 5, 5, 0, 0, 5, 5, 0, 0, 5, 5, 5},
+    {5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5},
+    {0, 0, 0, 5, 5, 0, 0, 5, 5, 0, 0, 0},
+    {0, 0, 5, 5, 0, 5, 5, 0, 5, 5, 0, 0},
+    {5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5}
+};
+
+char enemy3b[8][12] = {
+    {0, 0, 0, 0, 5, 5, 5, 5, 0, 0, 0, 0},
+    {0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0},
+    {5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5},
+    {5, 5, 5, 0, 0, 5, 5, 0, 0, 5, 5, 5},
+    {5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5},
+    {0, 0, 5, 5, 5, 0, 0, 5, 5, 5, 0, 0},
+    {0, 5, 5, 0, 0, 5, 5, 0, 0, 5, 5, 0},
+    {0, 0, 5, 5, 0, 0, 0, 0, 5, 5, 0, 0}
 };
 
 char ship[8][13] = { // ta em verde
@@ -153,6 +175,26 @@ char ship[8][13] = { // ta em verde
     {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
 
 };
+
+char barrier[22][16] = {
+    {0,0,0,0,0,7,7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,0},
+    {0,0,0,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,0,0,0},
+    {0,0,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,0,0},
+    {0,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,0},
+    {7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7},
+    {7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7},
+    {7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7},
+    {7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7},
+    {7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7},
+    {7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7},
+    {7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7},
+    {7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7},
+    {7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,7,7,7,7,7,7},
+    {7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,7,7,7},
+    {7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,7,7},
+    {7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,7,7}
+};
+
 
 void draw_sprite(unsigned int x, unsigned int y, char *sprite,
 	unsigned int sizex, unsigned int sizey, int color)
@@ -227,6 +269,11 @@ void init_enemies(struct object_s *enemies, int type, int line)
         for (int i = 0; i < QUANT; i++) {
             init_object(&enemies[i], enemy2a[0], enemy2b[0], 0, 11, 8, startX + i * spcX, startY + line * spcY, 1, 0, 5, 5, 1, 20, 1);
         }
+    case 3:
+        for (int i = 0; i < QUANT; i++) {
+            init_object(&enemies[i], enemy3a[0], enemy3b[0], 0, 12, 8, startX + i * spcX, startY + line * spcY, 1, 0, 5, 5, 1, 10, 1);
+        }
+        break;
     default:
         break;
     }
@@ -273,14 +320,13 @@ void move_enemies(struct object_s *enemies, int count){
         }
         if (enemies[i].posx < minX) minX = enemies[i].posx;
         if (enemies[i].posx > maxX) maxX = enemies[i].posx;
-        }
+    }
     
-
-    for (int i = 0; i < count; i++){
-         if (maxX + enemies[i].spriteszx >= (VGA_WIDTH - 10) || minX <= 10){ // 10 de margem
+        
+    if (maxX + enemies[0].spriteszx >= VGA_WIDTH || minX <= 0){ // 10 de margem
         for (int i = 0; i < count; i++){
-            enemies[i].dx = -(enemies[i].dx); // inverte a direção
-            enemies[i].posy += 10; // vai descendo, acho que nao precisa de limite aqui
+            enemies[i].dx = -enemies[i].dx; // inverte a direção
+            enemies[i].posy += 20; // vai descendo, acho que nao precisa de limite aqui
         }
     }
 
@@ -290,7 +336,6 @@ void move_enemies(struct object_s *enemies, int count){
         }
     }
     
-    }
 }
 
 void move_ship(struct object_s *obj, char inputKey)
@@ -300,7 +345,7 @@ void move_ship(struct object_s *obj, char inputKey)
 
     if(inputKey == 'a' && obj->posx > (0 + obj->spriteszx)){ 
         obj->posx -= 3; 
-    } else if(inputKey == 'd' && obj->posx < (VGA_WIDTH - obj->spriteszx)){
+    } else if(inputKey == 'd' && obj->posx < (VGA_WIDTH - obj->spriteszx + 1)){
         obj->posx += 3;
     }
 
@@ -316,7 +361,7 @@ void ship_fire_bullet(struct object_s *obj)
 
 void start_menu(struct object_s *mysteryShip){
     draw_object(mysteryShip, 1, -1);
-    display_print("SPACE INVADERS", VGA_MIDDLE_X - 50, VGA_MIDDLE_Y - 20, 2, WHITE);
+    display_print("SPACE INVADERS", VGA_MIDDLE_X - 70, VGA_HEIGHT - 20, 4, WHITE);
     display_print("PRESS 'space' TO START", VGA_MIDDLE_X - 70, VGA_MIDDLE_Y + 10, 1, WHITE);
     display_print("USE 'a' / 'd' TO MOVE", VGA_MIDDLE_X - 70, VGA_MIDDLE_Y + 30, 1, WHITE);
     display_print("PRESS 'space' TO SHOOT", VGA_MIDDLE_X - 70, VGA_MIDDLE_Y + 50, 1, WHITE);
@@ -337,17 +382,17 @@ void display_scores(char *player1_score){
 int main()
 {
     struct object_s mysteryShipObj;
-    struct object_s enemies_type1_a[QUANT];
-    struct object_s enemies_type1_b[QUANT];
+    struct object_s enemies_type1[QUANT];
+    struct object_s enemies_type3[QUANT];
     struct object_s enemies_type2[QUANT];
     struct object_s playerShip;
     
     
     init_display();
 
-    init_enemies(enemies_type1_a, 1, 1); // tipo 1 na linha 1
+    init_enemies(enemies_type1, 1, 1); // tipo 1 na linha 1
     init_enemies(enemies_type2, 2, 2); // tipo 2 na linha 2
-    init_enemies(enemies_type1_b, 1, 3); // tipo 1 na linha 3
+    init_enemies(enemies_type3, 3, 3); // tipo 3 na linha 3
     init_object(&playerShip, ship[0], 0, 0, 13, 8, VGA_MIDDLE_X, VGA_HEIGHT - 20, 0, 0, 0, 0, 3, 0, 2);
     init_object(&mysteryShipObj, mysteryShip[0], 0, 0, 16, 7, VGA_WIDTH, 5, -1, 0, 2, 2, 1, 100, 7);
 
