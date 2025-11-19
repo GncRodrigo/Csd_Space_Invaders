@@ -328,7 +328,7 @@ void move_enemies(struct object_s *enemies, int count){
             enemies[i].dx = -enemies[i].dx; // inverte a direção
             enemies[i].posy += 20; // vai descendo
             // força saída da borda com movimento imediato
-            enemies[i].posx += enemies[i].dx * 2;
+            enemies[i].posx += enemies[i].dx * 10;
         }
     }
 
@@ -347,7 +347,7 @@ void move_ship(struct object_s *obj, char inputKey)
 
     if(inputKey == 'a' && obj->posx > (0 + obj->spriteszx)){ 
         obj->posx -= 3; 
-    } else if(inputKey == 'd' && obj->posx < VGA_WIDTH){
+    } else if(inputKey == 'd' && obj->posx < (VGA_WIDTH - obj->spriteszx)){
         obj->posx += 3;
     }
 
