@@ -417,9 +417,9 @@ int main()
         draw_object(&playerShip, 0, -1);
 
         for(int i = 0; i < QUANT; i++){
-            draw_object(&enemies_type1_a[i], 1, -1);
+            draw_object(&enemies_type1[i], 1, -1);
             draw_object(&enemies_type2[i], 1, -1);
-            draw_object(&enemies_type1_b[i], 1, -1);
+            draw_object(&enemies_type3[i], 1, -1);
         }
 
         char inputKey = getInput();
@@ -432,9 +432,9 @@ int main()
         if (inputKey) putchar(inputKey);
 
         // move de baixo pra cima, videozao que eu vi tava assim eu acho
-        move_enemies(enemies_type1_b, QUANT);
+        move_enemies(enemies_type1, QUANT);
         move_enemies(enemies_type2, QUANT);
-        move_enemies(enemies_type1_a, QUANT);
+        move_enemies(enemies_type3, QUANT);
 
     }
 
