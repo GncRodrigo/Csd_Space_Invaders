@@ -143,25 +143,25 @@ char enemy2b[8][11] = { // todos em branco
 };
 
 char enemy3a[8][12] = {
-    {0, 0, 0, 0, 5, 5, 5, 5, 0, 0, 0, 0},
-    {0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0},
-    {5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5},
-    {5, 5, 5, 0, 0, 5, 5, 0, 0, 5, 5, 5},
-    {5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5},
-    {0, 0, 0, 5, 5, 0, 0, 5, 5, 0, 0, 0},
-    {0, 0, 5, 5, 0, 5, 5, 0, 5, 5, 0, 0},
-    {5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5}
+    {0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0},
+    {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0},
+    {0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0},
+    {1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1}
 };
 
 char enemy3b[8][12] = {
-    {0, 0, 0, 0, 5, 5, 5, 5, 0, 0, 0, 0},
-    {0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0},
-    {5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5},
-    {5, 5, 5, 0, 0, 5, 5, 0, 0, 5, 5, 5},
-    {5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5},
-    {0, 0, 5, 5, 5, 0, 0, 5, 5, 5, 0, 0},
-    {0, 5, 5, 0, 0, 5, 5, 0, 0, 5, 5, 0},
-    {0, 0, 5, 5, 0, 0, 0, 0, 5, 5, 0, 0}
+    {0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0},
+    {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0},
+    {0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0},
+    {0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0}
 };
 
 char ship[8][13] = { // ta em verde
@@ -345,7 +345,7 @@ void move_ship(struct object_s *obj, char inputKey)
 
     if(inputKey == 'a' && obj->posx > (0 + obj->spriteszx)){ 
         obj->posx -= 3; 
-    } else if(inputKey == 'd' && obj->posx < (VGA_WIDTH - obj->spriteszx + 1)){
+    } else if(inputKey == 'd' && obj->posx < (VGA_WIDTH - obj->spriteszx + 3)){
         obj->posx += 3;
     }
 
@@ -361,7 +361,7 @@ void ship_fire_bullet(struct object_s *obj)
 
 void start_menu(struct object_s *mysteryShip){
     draw_object(mysteryShip, 1, -1);
-    display_print("SPACE INVADERS", VGA_MIDDLE_X - 70, VGA_HEIGHT - 20, 4, WHITE);
+    display_print("SPACE INVADERS", VGA_MIDDLE_X - 70, 20, 3, WHITE);
     display_print("PRESS 'space' TO START", VGA_MIDDLE_X - 70, VGA_MIDDLE_Y + 10, 1, WHITE);
     display_print("USE 'a' / 'd' TO MOVE", VGA_MIDDLE_X - 70, VGA_MIDDLE_Y + 30, 1, WHITE);
     display_print("PRESS 'space' TO SHOOT", VGA_MIDDLE_X - 70, VGA_MIDDLE_Y + 50, 1, WHITE);
