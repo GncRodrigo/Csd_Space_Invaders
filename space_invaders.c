@@ -428,7 +428,7 @@ int main()
     init_object(&mysteryShipObj, mysteryShip[0], 0, 0, 16, 7, VGA_WIDTH, 5, -1, 0, 2, 2, 1, 100, 7);
 
     // declarações barreiras
-    init_object(&barriers[0], barrier[0], 0, 0, 22, 16, 0, VGA_HEIGHT - 60, 0, 0, 0, 0, 5, 0, 0);
+    init_object(&barriers[0], barrier[0], 0, 0, 22, 16, 40, VGA_HEIGHT - 60, 0, 0, 0, 0, 5, 0, 0);
     init_object(&barriers[1], barrier[0], 0, 0, 22, 16, 75, VGA_HEIGHT - 60, 0, 0, 0, 0, 5, 0, 0);
     init_object(&barriers[2], barrier[0], 0, 0, 22, 16, 150, VGA_HEIGHT - 60, 0, 0, 0, 0, 5, 0, 0);
     init_object(&barriers[3], barrier[0], 0, 0, 22, 16, 225, VGA_HEIGHT - 60, 0, 0, 0, 0, 5, 0, 0);
