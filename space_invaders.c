@@ -300,10 +300,14 @@ void move_object(struct object_s *obj)
 	if (--obj->speedxcnt == 0) {
 		obj->speedxcnt = obj->speedx;
 		obj->posx = obj->posx + obj->dx;
+
+		if (obj->posx + obj->spriteszx >= VGA_WIDTH || obj->posx <= 0) obj->dx = -obj->dx; 
 	}
 	if (--obj->speedycnt == 0) {
 		obj->speedycnt = obj->speedy;
 		obj->posy = obj->posy + obj->dy;
+
+		if (obj->posy + obj->spriteszy >= VGA_HEIGHT || obj->posy <= 0) obj->dy = -obj->dy;
 	}
 
 	if ((obj->speedx == obj->speedxcnt) || (obj->speedy == obj->speedycnt)) {
@@ -313,31 +317,11 @@ void move_object(struct object_s *obj)
 }
 
 void move_enemies(struct object_s *enemies, int count){
-    int minX = VGA_WIDTH + 1, maxX = -1;
-    for (int i = 0; i < count; i++){ // pega a posicao dos extremos
-        if (enemies[i].health <= 0){ // morto nao conta
-            continue;
-        }
-        if (enemies[i].posx < minX) minX = enemies[i].posx;
-        if (enemies[i].posx > maxX) maxX = enemies[i].posx;
-    }
-    
-        
-    if (maxX + enemies[0].spriteszx >= VGA_MIDDLE_X|| minX <= 0){ // chegou na borda
-        for (int i = 0; i < count; i++){
-            enemies[i].dx = -enemies[i].dx; // inverte a direção
-            enemies[i].posy += 20; // vai descendo
-            // força saída da borda com movimento imediato
-            enemies[i].posx += enemies[i].dx * 10;
-        }
-    }
-
     for (int i = 0; i < count; i++){
         if(enemies[i].health > 0){
             move_object(&enemies[i]);
         }
     }
-    
 }
 
 void move_ship(struct object_s *obj, char inputKey)
