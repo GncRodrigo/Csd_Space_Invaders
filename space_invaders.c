@@ -5,6 +5,10 @@
 #define VGA_MIDDLE_Y (VGA_HEIGHT / 2)
 
 #define QUANT 11 // quantidade por linha. Da pra mudar depois, ou aumentar por fase
+#define NUM_ENEMY_ROWS 3 // número de linhas de inimigos
+
+// Matriz que define o tipo de inimigo em cada linha
+int enemy_types[NUM_ENEMY_ROWS] = {1, 2, 3};
 
 
 /* ---------- getInputKey.c content (PS/2 AXI peripheral reader) ---------- */
@@ -251,32 +255,37 @@ void init_object(struct object_s *obj, char *spritea, char *spriteb,
     obj->bullets = bullets;         /* balas do objeto, a ideia eh limitar em um eu acho*/
 }
 
-void init_enemies(struct object_s *enemies, int type, int line)
+void init_all_enemies(struct object_s enemies_all[NUM_ENEMY_ROWS][QUANT])
 {
     int startX = 20;
     int startY = 20;
     int spcX = 20;
     int spcY = 20;
-
-    switch (type)
-    {   
-    case 1:
-        for (int i = 0; i < QUANT; i++) {
-            init_object(&enemies[i], enemy1a[0], enemy1b[0], 0, 8, 8, startX + i * spcX, startY + line * spcY, 1, 0, 5, 5, 1, 30, 1);
+    int line, i, type;
+    
+    for (line = 0; line < NUM_ENEMY_ROWS; line++) {
+        type = enemy_types[line];
+        
+        switch (type) {
+            case 1:
+                for (i = 0; i < QUANT; i++) {
+                    init_object(&enemies_all[line][i], enemy1a[0], enemy1b[0], 0, 8, 8, 
+                               startX + i * spcX, startY + line * spcY, 1, 0, 5, 5, 1, 30, 1);
+                }
+                break;
+            case 2:
+                for (i = 0; i < QUANT; i++) {
+                    init_object(&enemies_all[line][i], enemy2a[0], enemy2b[0], 0, 11, 8, 
+                               startX + i * spcX, startY + line * spcY, 1, 0, 4, 4, 1, 20, 1);
+                }
+                break;
+            case 3:
+                for (i = 0; i < QUANT; i++) {
+                    init_object(&enemies_all[line][i], enemy3a[0], enemy3b[0], 0, 12, 8, 
+                               startX + i * spcX, startY + line * spcY, 1, 0, 3, 3, 1, 10, 1);
+                }
+                break;
         }
-        break;
-    case 2:
-        for (int i = 0; i < QUANT; i++) {
-            init_object(&enemies[i], enemy2a[0], enemy2b[0], 0, 11, 8, startX + i * spcX, startY + line * spcY, 1, 0, 4, 4, 1, 20, 1);
-        }
-        break;
-    case 3:
-        for (int i = 0; i < QUANT; i++) {
-            init_object(&enemies[i], enemy3a[0], enemy3b[0], 0, 12, 8, startX + i * spcX, startY + line * spcY, 1, 0, 3, 3, 1, 10, 1);
-        }
-        break;
-    default:
-        break;
     }
 }
 
@@ -333,10 +342,6 @@ void move_enemies(struct object_s *enemies, int count){
         for (i = 0; i < count; i++){
             enemies[i].dx = -enemies[i].dx;
             enemies[i].posy += 20;
-            // reseta o contador de velocidade para sincronizar com os outros
-            enemies[i].speedxcnt = enemies[i].speedx;
-            draw_object(&enemies[i], 0, 0);
-            enemies[i].posy += 20;
         }
     }
 
@@ -344,6 +349,56 @@ void move_enemies(struct object_s *enemies, int count){
     for (i = 0; i < count; i++){
         if(enemies[i].health > 0){
             move_object(&enemies[i]);
+        }
+    }
+}
+
+void move_all_enemies(struct object_s enemies_all[NUM_ENEMY_ROWS][QUANT])
+{
+    int line, i, minX, maxX, any_line_touching_border;
+    
+    // Primeiro, verificar se QUALQUER linha vai tocar a borda
+    any_line_touching_border = 0;
+    
+    for (line = 0; line < NUM_ENEMY_ROWS; line++) {
+        minX = VGA_WIDTH + 1;
+        maxX = -1;
+        
+        for (i = 0; i < QUANT; i++){
+            if (enemies_all[line][i].health <= 0) continue;
+            
+            // Simula o próximo movimento
+            int next_x = enemies_all[line][i].posx + enemies_all[line][i].dx;
+            
+            if (next_x < minX) minX = next_x;
+            if (next_x + enemies_all[line][i].spriteszx > maxX) 
+                maxX = next_x + enemies_all[line][i].spriteszx;
+        }
+        
+        // Se esta linha vai passar da borda, marca para todas virarem
+        if (maxX >= VGA_WIDTH || minX <= 0) {
+            any_line_touching_border = 1;
+            break;
+        }
+    }
+    
+    // Se alguma linha vai tocar, todas viram
+    if (any_line_touching_border) {
+        for (line = 0; line < NUM_ENEMY_ROWS; line++) {
+            for (i = 0; i < QUANT; i++){
+                draw_object(&enemies_all[line][i], 0, 0); // apaga antes de mover
+                enemies_all[line][i].dx = -enemies_all[line][i].dx;
+                enemies_all[line][i].posy += 20;
+            }
+        }
+    }
+    
+    // Agora move todas as linhas
+    for (line = 0; line < NUM_ENEMY_ROWS; line++) {
+        for (i = 0; i < QUANT; i++){
+            if(enemies_all[line][i].health > 0){
+                move_object(&enemies_all[line][i]);
+            }
         }
     }
 }
@@ -392,21 +447,17 @@ void display_scores(char *player1_score){
 int main()
 {
     struct object_s mysteryShipObj;
-    struct object_s enemies_type1[QUANT];
-    struct object_s enemies_type3[QUANT];
-    struct object_s enemies_type2[QUANT];
+    struct object_s enemies_all[NUM_ENEMY_ROWS][QUANT];
     struct object_s playerShip;
-    
+    int line, i;
     
     init_display();
 
-    init_enemies(enemies_type1, 1, 1); // tipo 1 na linha 1
-    init_enemies(enemies_type2, 2, 2); // tipo 2 na linha 2
-    init_enemies(enemies_type3, 3, 3); // tipo 3 na linha 3
+    init_all_enemies(enemies_all);
     init_object(&playerShip, ship[0], 0, 0, 13, 8, VGA_MIDDLE_X, VGA_HEIGHT - 20, 0, 0, 0, 0, 3, 0, 2);
     init_object(&mysteryShipObj, mysteryShip[0], 0, 0, 16, 7, VGA_WIDTH, 5, -1, 0, 2, 2, 1, 100, 7);
 
-    char player1_score[6] = "00000"; // nao gostaria de usar char, mas o display_print so aceita string, foda
+    char player1_score[6] = "00000";
     int running = 0; 
     int menu = 1;
 
@@ -426,10 +477,10 @@ int main()
         display_scores(player1_score);
         draw_object(&playerShip, 0, -1);
 
-        for(int i = 0; i < QUANT; i++){
-            draw_object(&enemies_type1[i], 1, -1);
-            draw_object(&enemies_type2[i], 1, -1);
-            draw_object(&enemies_type3[i], 1, -1);
+        for(line = 0; line < NUM_ENEMY_ROWS; line++){
+            for(i = 0; i < QUANT; i++){
+                draw_object(&enemies_all[line][i], 1, -1);
+            }
         }
 
         char inputKey = getInput();
@@ -441,10 +492,8 @@ int main()
         }
         if (inputKey) putchar(inputKey);
 
-        // move de baixo pra cima, videozao que eu vi tava assim eu acho
-        move_enemies(enemies_type1, QUANT);
-        move_enemies(enemies_type2, QUANT);
-        move_enemies(enemies_type3, QUANT);
+        // move todos os inimigos
+        move_all_enemies(enemies_all);
 
     }
 
