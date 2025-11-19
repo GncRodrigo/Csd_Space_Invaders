@@ -180,7 +180,7 @@ char ship[8][13] = { // ta em verde
 
 };
 
-char barrier[22][16] = {
+char barrier[16][22] = {
     {0,0,0,0,0,7,7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,0},
     {0,0,0,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,0,0,0},
     {0,0,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,0,0},
@@ -258,7 +258,7 @@ void init_object(struct object_s *obj, char *spritea, char *spriteb,
 void init_all_enemies(struct object_s enemies_all[NUM_ENEMY_ROWS][QUANT])
 {
     int startX = 20;
-    int startY = 20;
+    int startY = 40;
     int spcX = 20;
     int spcY = 20;
     int line, i, type;
@@ -357,7 +357,7 @@ void move_all_enemies(struct object_s enemies_all[NUM_ENEMY_ROWS][QUANT])
             for (i = 0; i < QUANT; i++){
                 draw_object(&enemies_all[line][i], 0, 0); // apaga antes de mover
                 enemies_all[line][i].dx = -enemies_all[line][i].dx;
-                enemies_all[line][i].posy += 20;
+                enemies_all[line][i].posy += 5;
             }
         }
     }
@@ -418,6 +418,7 @@ int main()
     struct object_s mysteryShipObj;
     struct object_s enemies_all[NUM_ENEMY_ROWS][QUANT];
     struct object_s playerShip;
+    struct object_s barriers[4];
     int line, i;
     
     init_display();
@@ -425,6 +426,12 @@ int main()
     init_all_enemies(enemies_all);
     init_object(&playerShip, ship[0], 0, 0, 13, 8, VGA_MIDDLE_X, VGA_HEIGHT - 20, 0, 0, 0, 0, 3, 0, 2);
     init_object(&mysteryShipObj, mysteryShip[0], 0, 0, 16, 7, VGA_WIDTH, 5, -1, 0, 2, 2, 1, 100, 7);
+
+    // declarações barreiras
+    init_object(&barriers[0], barrier[0], 0, 0, 22, 16, 60, VGA_HEIGHT - 40, 0, 0, 0, 0, 5, 0, 0);
+    init_object(&barriers[1], barrier[0], 0, 0, 22, 16, 140, VGA_HEIGHT - 40, 0, 0, 0, 0, 5, 0, 0);
+    init_object(&barriers[2], barrier[0], 0, 0, 22, 16, 220, VGA_HEIGHT - 40, 0, 0, 0, 0, 5, 0, 0);
+    init_object(&barriers[3], barrier[0], 0, 0, 22, 16, 300, VGA_HEIGHT - 40, 0, 0, 0, 0, 5, 0, 0);
 
     char player1_score[6] = "00000";
     int running = 0; 
@@ -445,6 +452,11 @@ int main()
     while (running)  {
         display_scores(player1_score);
         draw_object(&playerShip, 0, -1);
+
+        draw_object(&barriers[0], 0, -1);
+        draw_object(&barriers[1], 0, -1);
+        draw_object(&barriers[2], 0, -1);
+        draw_object(&barriers[3], 0, -1);
 
         for(line = 0; line < NUM_ENEMY_ROWS; line++){
             for(i = 0; i < QUANT; i++){
