@@ -58,7 +58,7 @@ module if_axis
 			end
 			
 			// AXI data valid, clear TREADY
-			s_axis_control[1] = s_axis_tvalid_i; // deixei não bloqueante
+			s_axis_control[1] <= s_axis_tvalid_i; 
 			if ((s_axis_control[1] == 1'b1 && s_axis_control[0] == 1'b1)) begin
 				s_axis_control[0] <= 1'b0;
 			end
