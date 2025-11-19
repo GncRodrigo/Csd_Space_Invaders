@@ -276,13 +276,13 @@ void init_all_enemies(struct object_s enemies_all[NUM_ENEMY_ROWS][QUANT])
             case 2:
                 for (i = 0; i < QUANT; i++) {
                     init_object(&enemies_all[line][i], enemy2a[0], enemy2b[0], 0, 11, 8, 
-                               startX + i * spcX, startY + line * spcY, 1, 0, 4, 4, 1, 20, 1);
+                               startX + i * spcX, startY + line * spcY, 1, 0, 5, 5, 1, 20, 1);
                 }
                 break;
             case 3:
                 for (i = 0; i < QUANT; i++) {
                     init_object(&enemies_all[line][i], enemy3a[0], enemy3b[0], 0, 12, 8, 
-                               startX + i * spcX, startY + line * spcY, 1, 0, 3, 3, 1, 10, 1);
+                               startX + i * spcX, startY + line * spcY, 1, 0, 5, 5, 1, 10, 1);
                 }
                 break;
         }
@@ -320,37 +320,6 @@ void move_object(struct object_s *obj)
 		draw_object(&oldobj, 0, 0);
 		draw_object(obj, 1, -1);
 	}
-}
-
-void move_enemies(struct object_s *enemies, int count){
-    int minX = VGA_WIDTH + 1, maxX = -1;
-    int i;
-    
-    // Encontrar posições extremas considerando o movimento que SERÁ feito
-    for (i = 0; i < count; i++){
-        if (enemies[i].health <= 0) continue;
-        
-        // Simula o próximo movimento
-        int next_x = enemies[i].posx + enemies[i].dx;
-        
-        if (next_x < minX) minX = next_x;
-        if (next_x + enemies[i].spriteszx > maxX) maxX = next_x + enemies[i].spriteszx;
-    }
-    
-    // Se VAI passar da borda, inverte ANTES de mover
-    if (maxX >= VGA_WIDTH || minX <= 0) {
-        for (i = 0; i < count; i++){
-            enemies[i].dx = -enemies[i].dx;
-            enemies[i].posy += 20;
-        }
-    }
-
-    // Move todos normalmente
-    for (i = 0; i < count; i++){
-        if(enemies[i].health > 0){
-            move_object(&enemies[i]);
-        }
-    }
 }
 
 void move_all_enemies(struct object_s enemies_all[NUM_ENEMY_ROWS][QUANT])
