@@ -267,11 +267,12 @@ void init_enemies(struct object_s *enemies, int type, int line)
         break;
     case 2:
         for (int i = 0; i < QUANT; i++) {
-            init_object(&enemies[i], enemy2a[0], enemy2b[0], 0, 11, 8, startX + i * spcX, startY + line * spcY, 1, 0, 5, 5, 1, 20, 1);
+            init_object(&enemies[i], enemy2a[0], enemy2b[0], 0, 11, 8, startX + i * spcX, startY + line * spcY, 1, 0, 4, 4, 1, 20, 1);
         }
+        break;
     case 3:
         for (int i = 0; i < QUANT; i++) {
-            init_object(&enemies[i], enemy3a[0], enemy3b[0], 0, 12, 8, startX + i * spcX, startY + line * spcY, 1, 0, 5, 5, 1, 10, 1);
+            init_object(&enemies[i], enemy3a[0], enemy3b[0], 0, 12, 8, startX + i * spcX, startY + line * spcY, 1, 0, 3, 3, 1, 10, 1);
         }
         break;
     default:
@@ -331,6 +332,9 @@ void move_enemies(struct object_s *enemies, int count){
     if (maxX >= VGA_WIDTH || minX <= 0) {
         for (i = 0; i < count; i++){
             enemies[i].dx = -enemies[i].dx;
+            enemies[i].posy += 20;
+            // reseta o contador de velocidade para sincronizar com os outros
+            enemies[i].speedxcnt = enemies[i].speedx;
             draw_object(&enemies[i], 0, 0);
             enemies[i].posy += 20;
         }
