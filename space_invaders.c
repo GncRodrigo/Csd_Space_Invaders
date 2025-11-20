@@ -87,9 +87,8 @@ char getInput(){ // non-blocking, stateful: mapeia apenas 'a','d' e 'space'
 
     return 0;
 }
-// ...existing code...
 
-/* ---------- objects.c content (object logic) ---------- */
+/* ---------- sprites ---------- */
 /**/
 
 char mysteryShip[7][16] = {
@@ -135,7 +134,7 @@ char enemy2a[8][11] = {
     {0, 3, 0, 0, 0, 0, 0, 0, 0, 3, 0}
 };
 
-char enemy2b[8][11] = { // todos em branco
+char enemy2b[8][11] = {
     {0, 0, 3, 0, 0, 0, 0, 0, 3, 0, 0},
     {0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0},
     {0, 0, 3, 3, 3, 3, 3, 3, 3, 0, 0},
@@ -199,6 +198,14 @@ char barrier[16][22] = {
     {2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2}
 };
 
+char bullet_s[3][1] = {
+    {7},
+    {7},
+    {7}
+};
+
+/*-------------------------------------------------------*/
+/*---------------- structs e funcoes relacionadas ------------------------*/
 
 void draw_sprite(unsigned int x, unsigned int y, char *sprite,
 	unsigned int sizex, unsigned int sizey, int color)
@@ -217,6 +224,28 @@ void draw_sprite(unsigned int x, unsigned int y, char *sprite,
 	
 }
 
+struct bullet
+{
+    unsigned int posx, posy;
+    char sprite;
+    int spriteszx, spriteszy;
+    int dy;
+    int speed;
+    int quantity;
+};
+
+void init_bullet(struct bullet *b, unsigned int posx, unsigned int posy, char sprite,
+    int spriteszx, int spriteszy, int dy, int speed)
+{
+    b->posx = posx;
+    b->posy = posy;
+    b->sprite = sprite;
+    b->spriteszx = spriteszx;
+    b->spriteszy = spriteszy;
+    b->dy = dy;
+    b->speed = speed;
+};
+
 /* sprite based objects */
 struct object_s {
 	char *sprite_frame[3];
@@ -228,13 +257,13 @@ struct object_s {
 	int speedxcnt, speedycnt;
     int health;
     int score;
-    int bullets;
+    struct bullet bullets;
 };
 
 
 void init_object(struct object_s *obj, char *spritea, char *spriteb,
 	char *spritec, char spriteszx, char spriteszy, int posx, int posy, 
-	int dx, int dy, int spx, int spy, int health, int score, int bullets)
+	int dx, int dy, int spx, int spy, int health, int score)
 {
 	obj->sprite_frame[0] = spritea; /* frames de animação */
 	obj->sprite_frame[1] = spriteb; /* frames de animação */
@@ -252,7 +281,7 @@ void init_object(struct object_s *obj, char *spritea, char *spriteb,
 	obj->speedycnt = spy;           /* contadores de velocidade */
     obj->health = health;           /* vida do objeto */
     obj->score = score;             /* pontuação do objeto, podemos usar tanto para os inimigos quanto para o jogador, vai somando do que mata na do jogador */
-    obj->bullets = bullets;         /* balas do objeto, a ideia eh limitar em um eu acho*/
+    init_bullet(&obj->bullets, 0, 0, bullet_s[0][0], 1, 3, dy, 2);
 }
 
 void init_all_enemies(struct object_s enemies_all[NUM_ENEMY_ROWS][QUANT])
@@ -288,6 +317,9 @@ void init_all_enemies(struct object_s enemies_all[NUM_ENEMY_ROWS][QUANT])
         }
     }
 }
+
+/*-------------------------------------------------------*/
+/*-----------------funcoes uteis (desenhar, mover...) --------------------*/
 
 void draw_object(struct object_s *obj, char chgsprite, int color)
 {
@@ -326,17 +358,15 @@ void move_all_enemies(struct object_s enemies_all[NUM_ENEMY_ROWS][QUANT])
 {
     int line, i, minX, maxX, any_line_touching_border;
     
-    // Primeiro, verificar se QUALQUER linha vai tocar a borda
     any_line_touching_border = 0;
     
-    for (line = 0; line < NUM_ENEMY_ROWS; line++) {
+    for (line = 0; line < NUM_ENEMY_ROWS; line++) { // passa de linha em linha para verificar se o movimento futuro de algum inimigo bate na borda, se sim, inverte o dx de todos e desce 5px
         minX = VGA_WIDTH + 1;
         maxX = -1;
         
         for (i = 0; i < QUANT; i++){
             if (enemies_all[line][i].health <= 0) continue;
             
-            // Simula o próximo movimento
             int next_x = enemies_all[line][i].posx + enemies_all[line][i].dx;
             
             if (next_x < minX) minX = next_x;
@@ -344,25 +374,22 @@ void move_all_enemies(struct object_s enemies_all[NUM_ENEMY_ROWS][QUANT])
                 maxX = next_x + enemies_all[line][i].spriteszx;
         }
         
-        // Se esta linha vai passar da borda, marca para todas virarem
         if (maxX >= VGA_WIDTH || minX <= 0) {
             any_line_touching_border = 1;
             break;
         }
     }
     
-    // Se alguma linha vai tocar, todas viram
     if (any_line_touching_border) {
         for (line = 0; line < NUM_ENEMY_ROWS; line++) {
             for (i = 0; i < QUANT; i++){
-                draw_object(&enemies_all[line][i], 0, 0); // apaga antes de mover
+                draw_object(&enemies_all[line][i], 0, 0);
                 enemies_all[line][i].dx = -enemies_all[line][i].dx;
                 enemies_all[line][i].posy += 5;
             }
         }
     }
     
-    // Agora move todas as linhas
     for (line = 0; line < NUM_ENEMY_ROWS; line++) {
         for (i = 0; i < QUANT; i++){
             if(enemies_all[line][i].health > 0){
@@ -389,8 +416,45 @@ void move_ship(struct object_s *obj, char inputKey)
 
 void ship_fire_bullet(struct object_s *obj)
 {
-    // implementar depois
+    struct bullet oldbullet;
+    memcpy(&oldbullet, &obj->bullets, sizeof(struct bullet));
+    
+    if(obj->bullets.posy == 0 && obj->bullets.posy == 0){
+        obj->bullets.posx = obj->posx; // nao tenho certeza se a posx eh o centro
+        obj->bullets.posy = obj->posy;
+    }
+
+    obj->bullets.posy = obj->bullets.posy + (obj->bullets.dy * obj->bullets.speed);
+
+    draw_sprite(oldbullet.posx, oldbullet.posy, &oldbullet.sprite,
+        oldbullet.spriteszx, oldbullet.spriteszy, 0);
+
+    draw_sprite(obj->bullets.posx, obj->bullets.posy, obj->bullets.sprite[0],
+		obj->bullets.spriteszx, obj->bullets.spriteszy, -1);
 }
+
+void enemy_fire_bullet(struct object_s *obj)
+{
+    struct bullet oldbullet;
+    memcpy(&oldbullet, &obj->bullets, sizeof(struct bullet));
+    
+    if(obj->bullets.posy == 0 && obj->bullets.posy == 0){
+        obj->bullets.posx = obj->posx; // nao tenho certeza se a posx eh o centro
+        obj->bullets.posy = obj->posy;
+    }
+
+    obj->bullets.posy = obj->bullets.posy + (obj->bullets.dy * obj->bullets.speed);
+
+    draw_sprite(oldbullet.posx, oldbullet.posy, &oldbullet.sprite,
+        oldbullet.spriteszx, oldbullet.spriteszy, 0);
+
+    draw_sprite(obj->bullets.posx, obj->bullets.posy, obj->bullets.sprite[0],
+        obj->bullets.spriteszx, obj->bullets.spriteszy, -1);
+}
+
+
+/*-------------------------------------------------------*/
+/*------------------menus e display---------------------*/
 
 
 void start_menu(struct object_s *mysteryShip){
@@ -415,6 +479,9 @@ void display_scores(char *player1_score){
 
 int main()
 {
+
+/*------------------- inicializacoes -------------------------*/
+
     struct object_s mysteryShipObj;
     struct object_s enemies_all[NUM_ENEMY_ROWS][QUANT];
     struct object_s playerShip;
@@ -437,6 +504,8 @@ int main()
     int running = 0; 
     int menu = 1;
 
+/*------------------- menu loop -------------------------*/
+
     while(menu){
         start_menu(&mysteryShipObj);
         move_object(&mysteryShipObj);
@@ -448,6 +517,8 @@ int main()
         }
         if (inputKey) putchar(inputKey);
     }
+
+/*------------------- game loop -------------------------*/
 
     while (running)  {
         display_scores(player1_score);
