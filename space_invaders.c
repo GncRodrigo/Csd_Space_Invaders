@@ -4,8 +4,8 @@
 #define VGA_MIDDLE_X (VGA_WIDTH / 2)
 #define VGA_MIDDLE_Y (VGA_HEIGHT / 2)
 
-#define QUANT 11 // quantidade por linha. Da pra mudar depois, ou aumentar por fase
-#define NUM_ENEMY_ROWS 5 // número de linhas de inimigos
+#define QUANT 11 // quantidade de inimigos por linha (cuidado com o espaçamento)
+#define NUM_ENEMY_ROWS 5 // número de linhas de inimigos (se aumentar tem que arrumar o array enemy_types)
 
 #define ENEMY_SHOOT_CHANCE 10000 // quanto menor, mais chance de atirar
 
@@ -51,7 +51,7 @@ int sw_axi_data_available()
     return (SW_AXI_STATUS & SW_AXI_STVALID);
 }
 
-char getInput(){ // non-blocking, stateful: mapeia apenas 'a','d' e 'space'
+char getInput(){ // mapeia so 'a', 'd', 's' e espaço
     static uint8_t saw_f0 = 0;
     static uint8_t saw_e0 = 0;
     char ret = 0;
@@ -95,11 +95,11 @@ char getInput(){ // non-blocking, stateful: mapeia apenas 'a','d' e 'space'
     return 0;
 }
 /*----------- funcao pra simular aleatoriedade ---------------*/
-// precisava de uma funcao pra gerar numeros aleatorios simples, pedi pro gepeto
+// tentei usar rand() mas acho que nao eh possivel, entao fiz uma funcao de LCG simples
 static unsigned long seed = 123456;
 
-unsigned int rand_lcg() {
-    seed = (1103515245 * seed + 12345) % 0x80000000;
+unsigned int rand_lcg() { 
+    seed = (1103515245 * seed + 12345) % 0x80000000; // peguei os valores na internet, supostamente sao comuns em LCGs
     return seed;
 }
 
@@ -109,7 +109,7 @@ void srand_lcg(unsigned long new_seed) {
 
 /*-----------------------------------------------------------*/
 /* ---------- sprites ---------- */
-/**/
+/* utilizei as referencias disponiveis no pdf do t3 e algumas desse site https://www.spriters-resource.com/arcade/spaceinv/asset/115520/ */
 
 char mysteryShip[7][16] = { // WHITE
     {0, 0, 0, 0, 0, 7, 7, 7, 7, 7, 7, 0, 0, 0, 0, 0},
@@ -294,7 +294,7 @@ void draw_sprite(unsigned int x, unsigned int y, char *sprite,
 	
 }
 
-struct bullet
+struct bullet // struct para os tiros, cada objeto pode ter seu proprio tipo de tiro
 {
     unsigned int posx, posy;
     char *sprite;
@@ -326,9 +326,9 @@ struct object_s {
 	int dx, dy;
 	int speedx, speedy;
 	int speedxcnt, speedycnt;
-    int health;
-    int score;
-    struct bullet bullets;
+    int health;             // controla a vida, inimigos possuem 1 de vida, o player tem 3
+    int score;              // pontuacao do jogador e dos inimigos, quando um inimigo morre, soma a pontuacao do inimigo na do jogador
+    struct bullet bullets;  
 };
 
 void init_object(struct object_s *obj, char *spritea, char *spriteb,
@@ -350,8 +350,8 @@ void init_object(struct object_s *obj, char *spritea, char *spriteb,
 	obj->speedxcnt = spx;           /* contadores de velocidade */
 	obj->speedycnt = spy;           /* contadores de velocidade */
     obj->health = health;           /* vida do objeto */
-    obj->score = score;             /* pontuação do objeto, podemos usar tanto para os inimigos quanto para o jogador, vai somando do que mata na do jogador */
-    switch(type){
+    obj->score = score;              /* pontuação do objeto */
+    switch(type){                   /* inicializa o tipo de tiro baseado no tipo do objeto, manda o tipo quando for chamar init_object, deixei defines para facilitar*/
         case PLAYER:
             init_bullet(&obj->bullets, 0, 0, &bullet_s[0][0], 1, 3, -1, 3);
             break;
@@ -363,7 +363,7 @@ void init_object(struct object_s *obj, char *spritea, char *spriteb,
     }
 }
 
-void init_all_enemies(struct object_s enemies_all[NUM_ENEMY_ROWS][QUANT])
+void init_all_enemies(struct object_s enemies_all[NUM_ENEMY_ROWS][QUANT]) /* ajuda na inicializacao dos inimigos, cada linha tem um tipo diferente, pode mudar usando o enemy_types */
 {
     int startX = 20;
     int startY = 40;
@@ -436,7 +436,7 @@ void move_all_enemies(struct object_s enemies_all[NUM_ENEMY_ROWS][QUANT])
     
     any_line_touching_border = 0;
     
-    for (line = 0; line < NUM_ENEMY_ROWS; line++) { // passa de linha em linha para verificar se o movimento futuro de algum inimigo bate na borda, se sim, inverte o dx de todos e desce 5px
+    for (line = 0; line < NUM_ENEMY_ROWS; line++) { // passa de linha em linha para verificar se o movimento futuro de algum inimigo bate na borda, se sim, inverte o dx de todos e desce 4px, quando tentei usar a posicao atual dava errado, ele nao respeitava os limites
         minX = VGA_WIDTH + 1;
         maxX = -1;
         
@@ -451,16 +451,16 @@ void move_all_enemies(struct object_s enemies_all[NUM_ENEMY_ROWS][QUANT])
         }
         
         if (maxX >= VGA_WIDTH || minX <= 0) {
-            any_line_touching_border = 1;
+            any_line_touching_border = 1; // algum inimigo vai chegar na borda
             break;
         }
     }
     
-    if (any_line_touching_border) {
+    if (any_line_touching_border) { // inverte o dx e desce 4px quando algum inimigo vai chegar na borda
         for (line = 0; line < NUM_ENEMY_ROWS; line++) {
             for (i = 0; i < QUANT; i++){
                 if(enemies_all[line][i].health <= 0) continue;
-                draw_object(&enemies_all[line][i], 0, 0);
+                draw_object(&enemies_all[line][i], 0, 0); // apaga o inimigo antes de mover, evita ficar resto quando for apagar depois de descer
                 enemies_all[line][i].dx = -enemies_all[line][i].dx;
                 enemies_all[line][i].posy += 4; // desce 4px
             }
@@ -482,16 +482,16 @@ void move_ship(struct object_s *obj, char inputKey)
 	memcpy(&oldobj, obj, sizeof(struct object_s));
 
     if(inputKey == 'a' && obj->posx > (0 + obj->spriteszx)){ 
-        obj->posx -= 2; 
+        obj->posx -= 2; // move para esquerda
     } else if(inputKey == 'd' && obj->posx < (VGA_WIDTH - (obj->spriteszx + 2))){
-        obj->posx += 2;
+        obj->posx += 2; // move para direita
     }
 
-    draw_object(&oldobj, 0, 0);
-    draw_object(obj, 0, -1);
+    draw_object(&oldobj, 0, 0); // apaga a posicao antiga
+    draw_object(obj, 0, -1);    // desenha na nova posicao
 }
 
-void ship_fire_bullet(struct object_s *obj)
+void ship_fire_bullet(struct object_s *obj) // controla se ja tem um tiro na tela
 {
 
     if(obj->bullets.quantity > 0){
@@ -502,7 +502,7 @@ void ship_fire_bullet(struct object_s *obj)
 
 }
 
-void enemy_fire_bullet(struct object_s *obj)
+void enemy_fire_bullet(struct object_s *obj) // controla se ja tem um tiro na tela, ia fazer outra animacao de tiro mas acabei nao tendo tempo
 {
 
     if(obj->bullets.quantity > 0){
@@ -519,33 +519,30 @@ void move_bullet(struct object_s *obj)
         return; // nao tem tiro na tela
     }
 
-    struct bullet oldbullet;
+    struct bullet oldbullet; // pega a posicao antiga do tiro para apagar depois
     memcpy(&oldbullet, &obj->bullets, sizeof(struct bullet));
     
-    if(obj->bullets.posx == 0 && obj->bullets.posy == 0){
+    if(obj->bullets.posx == 0 && obj->bullets.posy == 0){ // se for a primeira vez que o tiro vai ser desenhado, posiciona ele na posicao certa (meio/cima da nave)
         obj->bullets.posx = obj->posx + (obj->spriteszx / 2);
         obj->bullets.posy = obj->posy;
     }
 
-    obj->bullets.posy = obj->bullets.posy + (obj->bullets.dy * obj->bullets.speed);
+    obj->bullets.posy = obj->bullets.posy + (obj->bullets.dy * obj->bullets.speed); // move o tiro na direcao dy com a velocidade definida (dy do player eh -1, do inimigo eh 1)
 
-    if(obj->bullets.posy < 0 || obj->bullets.posy > VGA_HEIGHT){
+    if(obj->bullets.posy < 0 || obj->bullets.posy > VGA_HEIGHT){ // se o tiro sair da tela, apaga ele
         obj->bullets.quantity = 0;
-        draw_sprite(oldbullet.posx, oldbullet.posy, oldbullet.sprite,
-            oldbullet.spriteszx, oldbullet.spriteszy, 0);
+        draw_sprite(oldbullet.posx, oldbullet.posy, oldbullet.sprite, oldbullet.spriteszx, oldbullet.spriteszy, 0);
         obj->bullets.posx = 0;
         obj->bullets.posy = 0;
         return;
     } 
 
-    draw_sprite(oldbullet.posx, oldbullet.posy, oldbullet.sprite,
-        oldbullet.spriteszx, oldbullet.spriteszy, 0);
+    draw_sprite(oldbullet.posx, oldbullet.posy, oldbullet.sprite, oldbullet.spriteszx, oldbullet.spriteszy, 0);
 
-    draw_sprite(obj->bullets.posx, obj->bullets.posy, obj->bullets.sprite,
-		obj->bullets.spriteszx, obj->bullets.spriteszy, -1);
+    draw_sprite(obj->bullets.posx, obj->bullets.posy, obj->bullets.sprite, obj->bullets.spriteszx, obj->bullets.spriteszy, -1);
 };
 
-int detect_collision(struct bullet *obj1, struct object_s *obj2)
+int detect_collision(struct bullet *obj1, struct object_s *obj2) // detecta colisao, disponibilizado pelo professor
 {
 	if (obj1->posx < obj2->posx + obj2->spriteszx &&
 		obj1->posx + obj1->spriteszx > obj2->posx &&
@@ -555,7 +552,7 @@ int detect_collision(struct bullet *obj1, struct object_s *obj2)
 	return 0;
 }
 
-void enemy_death_animation(struct object_s *enemy){
+void enemy_death_animation(struct object_s *enemy){ // animacao de morte do inimigo, achei melhor fazer um delay, fica mais facil de apagar depois
     for(int frame = 0; frame < 3; frame++){
         draw_sprite(enemy->posx, enemy->posy, (char *)enemy_death, 13, 7, -1);
         delay_ms(70);
@@ -564,7 +561,7 @@ void enemy_death_animation(struct object_s *enemy){
     }
 }
 
-void player_death_animation(struct object_s *player){
+void player_death_animation(struct object_s *player){ // animacao de morte do jogador, peguei os sprites do jogo original de referencia, nao sei se a ordem e quantidade de vezes estao corretas
     for(int frame = 0; frame < 4; frame++){
         draw_sprite(player->posx, player->posy, (char *)player_death_1, 15, 8, -1);
         delay_ms(100);
@@ -579,6 +576,10 @@ void player_death_animation(struct object_s *player){
 
 void check_for_collisions(struct object_s *playerShip, struct object_s enemies_all[NUM_ENEMY_ROWS][QUANT], struct object_s barriers[4])
 {
+    // checa colisao dos tiros com inimigos, barreiras e jogador
+    // sempre que houver colisao, apaga o tiro e o objeto atingido, atualiza a pontuacao ou a vida do jogador conforme necessario
+    // quando apagar um tiro, muda a posicao do tiro para (0,0), assim quando ele for disparado novamente, ele comeca da posicao correta
+
     for (int i = 0; i < 4; i++){
             if(detect_collision(&playerShip->bullets, &barriers[i])){ // testar colisao do tiro com barreiras
                 playerShip->bullets.quantity = 0; // tiro some
@@ -634,8 +635,8 @@ void check_for_collisions(struct object_s *playerShip, struct object_s enemies_a
 /*------------------menus e display---------------------*/
 
 
-void start_menu(struct object_s *mysteryShip){
-    draw_object(mysteryShip, 1, -1);
+void start_menu(struct object_s *mysteryShip){ // menu inicial
+    draw_object(mysteryShip, 1, -1); // coloquei uma nave misteriosa so pra ficar mais legal
     display_print("SPACE INVADERS", VGA_MIDDLE_X - 90, 20, 2, WHITE);
     display_print("PRESS 's' TO START", VGA_MIDDLE_X - 70, VGA_MIDDLE_Y + 10, 1, WHITE);
     display_print("USE 'a' / 'd' TO MOVE", VGA_MIDDLE_X - 70, VGA_MIDDLE_Y + 30, 1, WHITE);
@@ -644,10 +645,10 @@ void start_menu(struct object_s *mysteryShip){
 
 void init_display()
 {
-    display_background(BLACK); // acho que seria so isso por enquanto, podemos colocar algumas animacoes depois
+    display_background(BLACK); // apagar a tela
 }
 
-void int_to_score(char *buffer, int score) {
+void int_to_score(char *buffer, int score) {   // converte um inteiro em string de 5 digitos pra mostrar na tela com display_print
     buffer[0] = (score / 10000) % 10 + '0';
     buffer[1] = (score / 1000) % 10 + '0';
     buffer[2] = (score / 100) % 10 + '0';
@@ -657,16 +658,20 @@ void int_to_score(char *buffer, int score) {
 }
 
 void display_scores(char *player_score, struct object_s *playerShip, int high_score_int, char *high_score){
+    // desenha as vidas e pontuacao na tela
+
     int lifes = playerShip->health;
     display_print("LIVES:", VGA_WIDTH - 70, 10, 1, WHITE);
     for(int i = 0; i < lifes; i++){
         draw_sprite(VGA_WIDTH - 70 + (i * (playerShip->spriteszx + 2)), 20, playerShip->sprite_frame[0],
             playerShip->spriteszx, playerShip->spriteszy, -1);
     }
-    display_print(player_score, 10, 20, 1, BLACK); // fica flickando, mas nao sei como resolveria
+
+    display_print(player_score, 10, 20, 1, BLACK); // apaga a pontuacao antiga
     display_print("SCORE:", 10, 10, 1, WHITE);
     int_to_score(player_score, playerShip->score);
-    display_print(player_score, 10, 20, 1, WHITE);
+    display_print(player_score, 10, 20, 1, WHITE); // escreve a nova pontuacao
+
     display_print("HIGH SCORE:", VGA_MIDDLE_X - 40, 10, 1, WHITE);
     int_to_score(high_score, high_score_int);
     display_print(high_score, VGA_MIDDLE_X - 40, 20, 1, WHITE);
@@ -677,7 +682,8 @@ int main()
 {
 
 /*------------------- inicializacoes -------------------------*/
-    srand_lcg(123456);
+    srand_lcg(123456); // seed para numeros aleatorios, pode mudar para qualquer valor, usei para os tiros dos inimigos
+
     struct object_s mysteryShipObj;
     struct object_s enemies_all[NUM_ENEMY_ROWS][QUANT];
     struct object_s playerShip;
@@ -686,41 +692,51 @@ int main()
     
     init_display();
 
+    // inicializa inimigos e jogador
     init_all_enemies(enemies_all);
     init_object(&playerShip, ship[0], 0, 0, 13, 8, VGA_MIDDLE_X, VGA_HEIGHT - 20, 0, 0, 0, 0, 3, 0, PLAYER);
     init_object(&mysteryShipObj, mysteryShip[0], 0, 0, 16, 7, VGA_WIDTH, 5, -1, 0, 2, 2, 1, 100, ENEMY);
 
-    // declarações barreiras
+    // inicializa as barreiras
     init_object(&barriers[0], barrier[0], 0, 0, 22, 16, 40, VGA_HEIGHT - 60, 0, 0, 0, 0, 5, 0, BARRIER);
     init_object(&barriers[1], barrier[0], 0, 0, 22, 16, 100, VGA_HEIGHT - 60, 0, 0, 0, 0, 5, 0, BARRIER);
     init_object(&barriers[2], barrier[0], 0, 0, 22, 16, 180, VGA_HEIGHT - 60, 0, 0, 0, 0, 5, 0, BARRIER);
     init_object(&barriers[3], barrier[0], 0, 0, 22, 16, 260, VGA_HEIGHT - 60, 0, 0, 0, 0, 5, 0, BARRIER);
 
+    // scores
     char player_score[6] = "00000";
     char high_score[6] = "00000";
     int high_score_int = 0;
+
+    // variaveis de controle do jogo
     int running = 0; 
     int menu = 1;
     int enemies_alive = 0;
     
-    char lastInputKey = 0;
-/*------------------- menu loop -------------------------*/
+    char lastInputKey = 0; // para evitar que o jogador dispare varios tiros quando fica parado
+
+/*------------------- main loop -------------------------*/
 while(1){
-        if(playerShip.score > high_score_int){
+
+        if(playerShip.score > high_score_int){ // pega o high score
             high_score_int = playerShip.score;
             for(i = 0; i < 6; i++){
                 high_score[i] = player_score[i];
             }
         }
-        player_score[0] = '0';
-        player_score[1] = '0';
-        player_score[2] = '0';
-        player_score[3] = '0';
-        player_score[4] = '0';
+
+
+        for (int i = 0; i < 5; i++){ // reseta a pontuacao do jogador
+            player_score[i] = '0';
+        }
         player_score[5] = '\0';
-        playerShip.health = 3;
         playerShip.score = 0;
-        init_all_enemies(enemies_all);
+
+        playerShip.health = 3; // reseta as vidas do jogador
+        
+        init_all_enemies(enemies_all); // reseta os inimigos
+
+/*------------------- menu loop -------------------------*/
     while(menu){
         start_menu(&mysteryShipObj);
         move_object(&mysteryShipObj);
@@ -730,26 +746,30 @@ while(1){
             init_display();
             running = 1;
         }
-        if (inputKey) putchar(inputKey);
     }
 
 /*------------------- game loop -------------------------*/
 
     while (running)  {
+
         display_scores(player_score, &playerShip, high_score_int, high_score);
-        if(playerShip.health <= 0){ // volta pro menu
+
+        if(playerShip.health <= 0){ // volta pro menu se acabar as vidas
             running = 0;
             menu = 1;
             init_display();
             continue;
         }
-        draw_object(&playerShip, 0, -1);
 
+        // desenha jogador e barreiras
+        draw_object(&playerShip, 0, -1);
         draw_object(&barriers[0], 0, -1);
         draw_object(&barriers[1], 0, -1);
         draw_object(&barriers[2], 0, -1);
         draw_object(&barriers[3], 0, -1);
 
+
+        // desenha inimigos vivos, nao muda o sprite agora, so muda quando se moverem
         for(line = 0; line < NUM_ENEMY_ROWS; line++){
             for(i = 0; i < QUANT; i++){
                 if(enemies_all[line][i].health <= 0) continue;
@@ -757,6 +777,7 @@ while(1){
             }
         }
 
+        // captura input do jogador
         char inputKey = getInput();
 
         if(inputKey == 'a' || inputKey == 'd'){
@@ -764,27 +785,27 @@ while(1){
             lastInputKey = inputKey;
         } else if(inputKey == ' ' && lastInputKey != ' '){
             ship_fire_bullet(&playerShip);
-            lastInputKey = inputKey;
+            lastInputKey = inputKey; // evita disparo continuo
         }
 
-        if (inputKey) putchar(inputKey);
-        enemies_alive = 0;
+        enemies_alive = 0; // contador de inimigos vivos
         for(int i = 0; i < NUM_ENEMY_ROWS; i++){
             for(int j = 0; j < QUANT; j++){
+
                 if(enemies_all[i][j].health <= 0)
                 {
                     move_bullet(&enemies_all[i][j]); // evita ficar com tiro preso na tela
                     continue;
                 } 
                 enemies_alive++;
-                // inimigos atiram aleatoriamente
+        
                 int shoot_chance = rand_lcg() % ENEMY_SHOOT_CHANCE; // ajustar a chance de tiro
                 if(shoot_chance < 5){ // 0.05% de chance de atirar a cada frame quando ENEMY_SHOOT_CHANCE = 10000
                     enemy_fire_bullet(&enemies_all[i][j]);
                 }
                 move_bullet(&enemies_all[i][j]);
 
-                if(enemies_all[i][j].posy + enemies_all[i][j].spriteszy >= (VGA_HEIGHT - 76)){ // inimigo chegou na base, game over
+                if(enemies_all[i][j].posy + enemies_all[i][j].spriteszy >= (VGA_HEIGHT - 60)){ // inimigo chegou na base, volta pro menu
                     running = 0;
                     menu = 1;
                     init_display();
@@ -793,7 +814,7 @@ while(1){
             }
         }
 
-        if(enemies_alive == 0){ // volta pro menu
+        if(enemies_alive == 0){ // se nao tiver mais inimigos vivos, volta pro menu
             running = 0;
             menu = 1;
             init_display();
@@ -801,7 +822,6 @@ while(1){
         }
         
         check_for_collisions(&playerShip, enemies_all, barriers);
-        // move todos os inimigos
         move_bullet(&playerShip);
         move_all_enemies(enemies_all);
 
