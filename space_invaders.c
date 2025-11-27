@@ -840,9 +840,8 @@ while(1){
         
         /* Mystery Ship (UFO) logic */
         if (!mystery_ship_active) {
-            /* Chance aleatoria do mystery ship aparecer */
-            int mystery_chance = rand_lcg() % MYSTERY_SHIP_CHANCE;
-            if (mystery_chance < 1) {
+            /* Chance aleatoria do mystery ship aparecer (1/MYSTERY_SHIP_CHANCE por frame) */
+            if (rand_lcg() % MYSTERY_SHIP_CHANCE == 0) {
                 mystery_ship_active = 1;
                 /* Reinicia posicao do mystery ship */
                 mysteryShipObj.posx = VGA_WIDTH;
@@ -853,9 +852,8 @@ while(1){
             draw_object(&mysteryShipObj, 0, -1);
             move_object(&mysteryShipObj);
             
-            /* Verifica se saiu da tela */
-            if (mysteryShipObj.posx + mysteryShipObj.spriteszx <= 0) {
-                draw_object(&mysteryShipObj, 0, 0); /* apaga */
+            /* Verifica se saiu da tela (completamente fora) */
+            if ((int)mysteryShipObj.posx + (int)mysteryShipObj.spriteszx <= 0) {
                 mystery_ship_active = 0;
             }
             
