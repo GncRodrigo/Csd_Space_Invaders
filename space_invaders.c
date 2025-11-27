@@ -8,6 +8,8 @@
 #define NUM_ENEMY_ROWS 5 // número de linhas de inimigos
 
 #define ENEMY_SHOOT_CHANCE 10000 // quanto menor, mais chance de atirar
+#define MYSTERY_SHIP_CHANCE 5000 // chance do mystery ship aparecer (quanto menor, mais chance)
+#define TOTAL_ENEMIES (NUM_ENEMY_ROWS * QUANT) // total de inimigos
 
 #define BARRIER 0
 #define PLAYER 1
@@ -476,6 +478,35 @@ void move_all_enemies(struct object_s enemies_all[NUM_ENEMY_ROWS][QUANT])
     }
 }
 
+/* Atualiza a velocidade dos inimigos baseado em quantos estao vivos */
+void update_enemy_speed(struct object_s enemies_all[NUM_ENEMY_ROWS][QUANT], int enemies_alive)
+{
+    int line, i;
+    int new_speed;
+    
+    /* Quanto menos inimigos, mais rapido eles se movem */
+    /* Velocidade varia de 5 (todos vivos) ate 1 (poucos vivos) */
+    if (enemies_alive > TOTAL_ENEMIES * 3 / 4) {
+        new_speed = 5; /* velocidade normal */
+    } else if (enemies_alive > TOTAL_ENEMIES / 2) {
+        new_speed = 4; /* um pouco mais rapido */
+    } else if (enemies_alive > TOTAL_ENEMIES / 4) {
+        new_speed = 3; /* rapido */
+    } else if (enemies_alive > TOTAL_ENEMIES / 8) {
+        new_speed = 2; /* muito rapido */
+    } else {
+        new_speed = 1; /* velocidade maxima */
+    }
+    
+    for (line = 0; line < NUM_ENEMY_ROWS; line++) {
+        for (i = 0; i < QUANT; i++) {
+            if (enemies_all[line][i].health > 0) {
+                enemies_all[line][i].speedx = new_speed;
+            }
+        }
+    }
+}
+
 void move_ship(struct object_s *obj, char inputKey)
 {
     struct object_s oldobj;
@@ -702,6 +733,7 @@ int main()
     int running = 0; 
     int menu = 1;
     int enemies_alive = 0;
+    int mystery_ship_active = 0; /* flag para indicar se o mystery ship esta na tela */
     
     char lastInputKey = 0;
 /*------------------- menu loop -------------------------*/
@@ -729,6 +761,9 @@ while(1){
             menu = 0;
             init_display();
             running = 1;
+            mystery_ship_active = 0; /* reset mystery ship */
+            /* reinicia o mystery ship na posicao inicial */
+            init_object(&mysteryShipObj, mysteryShip[0], 0, 0, 16, 7, VGA_WIDTH, 5, -1, 0, 2, 2, 1, 100, ENEMY);
         }
         if (inputKey) putchar(inputKey);
     }
@@ -798,6 +833,48 @@ while(1){
             menu = 1;
             init_display();
             continue;
+        }
+        
+        /* Atualiza velocidade dos inimigos baseado em quantos estao vivos */
+        update_enemy_speed(enemies_all, enemies_alive);
+        
+        /* Mystery Ship (UFO) logic */
+        if (!mystery_ship_active) {
+            /* Chance aleatoria do mystery ship aparecer */
+            int mystery_chance = rand_lcg() % MYSTERY_SHIP_CHANCE;
+            if (mystery_chance < 1) {
+                mystery_ship_active = 1;
+                /* Reinicia posicao do mystery ship */
+                mysteryShipObj.posx = VGA_WIDTH;
+                mysteryShipObj.health = 1;
+            }
+        } else {
+            /* Mystery ship esta ativo - desenha e move */
+            draw_object(&mysteryShipObj, 0, -1);
+            move_object(&mysteryShipObj);
+            
+            /* Verifica se saiu da tela */
+            if (mysteryShipObj.posx + mysteryShipObj.spriteszx <= 0) {
+                draw_object(&mysteryShipObj, 0, 0); /* apaga */
+                mystery_ship_active = 0;
+            }
+            
+            /* Verifica colisao com tiro do jogador */
+            if (detect_collision(&playerShip.bullets, &mysteryShipObj)) {
+                mysteryShipObj.health = 0;
+                draw_sprite(mysteryShipObj.posx, mysteryShipObj.posy, 
+                    mysteryShipObj.sprite_frame[mysteryShipObj.cursprite],
+                    mysteryShipObj.spriteszx, mysteryShipObj.spriteszy, 0);
+                enemy_death_animation(&mysteryShipObj);
+                playerShip.bullets.quantity = 0;
+                draw_sprite(playerShip.bullets.posx, playerShip.bullets.posy, 
+                    playerShip.bullets.sprite, playerShip.bullets.spriteszx, 
+                    playerShip.bullets.spriteszy, 0);
+                playerShip.bullets.posx = 0;
+                playerShip.bullets.posy = 0;
+                playerShip.score += mysteryShipObj.score; /* 100 pontos */
+                mystery_ship_active = 0;
+            }
         }
         
         check_for_collisions(&playerShip, enemies_all, barriers);
