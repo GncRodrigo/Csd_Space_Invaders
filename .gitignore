@@ -1,0 +1,36 @@
+# .gitignore - Vivado "junk" e VSCode
+# itens de VSCode
+.vscode/
+
+# mac / windows
+.DS_Store
+Thumbs.db
+
+# Vivado / Xilinx
+*.jou
+*.log
+*.pb
+*.rpt
+*.str
+*.backup
+*.cache/
+*.sim/
+*.runs/
+*.ip_user_files/
+*.hw/
+*.Xil/
+.Xil_db/
+.sdk/
+*_xmsgs/
+*.ltx
+
+# Artefatos de build (bitstreams, binários, etc.)
+*.bit
+*.bin
+*.mcs
+*.elf
+
+# arquivos temporários/backup
+*~
+*.tmp
+*.bak
