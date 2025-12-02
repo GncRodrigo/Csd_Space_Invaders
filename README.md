@@ -17,9 +17,11 @@ A simple project that integrates a PS/2 keyboard interface with a VGA video driv
 
 ## 🚀 How to Run
 
-1. Make sure you have a RISC-V cross-compiler installed.  
-2. Add the application `.c` file into `hf-risc/software/app/`.  
-3. Add a new rule to the Makefile to compile your application (e.g., `space_invaders`).  
+1. Generate the bistream using Vivado.
+2. Program your board.
+3. Make sure you have a RISC-V cross-compiler installed.  
+4. Add the application `.c` file into `hf-risc/software/app/`.  
+5. Add a new rule to the Makefile to compile your application (e.g., `space_invaders`).  
 
 Then open **three terminals**:
 
