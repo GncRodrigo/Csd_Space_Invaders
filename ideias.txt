@@ -1,3 +1,0 @@
---- Fazer o que o professor falou:
-        usar uma flag na memoria para criar um estado em que a memoria é apagada, o entuito é para ele parar de andar infinito.
-        fazer 2 process no if_axi um pra escreve no registrador 0 quando a tecla for lida pelo c, graxa véia
